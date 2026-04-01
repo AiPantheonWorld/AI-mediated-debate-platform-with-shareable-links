@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Accord · AI-Mediated Dialogue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+/* ============================================================
+   ACCORD v3 — Warm Parchment Editorial
+   Palette: Cream + Warm Gold + Deep Brown
+   Feel: Calm, inviting, professional — like a thoughtful journal
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+
+:root{
+  /* Backgrounds */
+  --bg:      #f0ebe2;
+  --surface: #ffffff;
+  --surface2:#faf7f2;
+  --surface3:#f3ede3;
+  --surface4:#ede6d9;
+
+  /* Borders */
+  --border:  #e2d9cc;
+  --border2: #cec4b4;
+  --border3: #b8ac9a;
+
+  /* Text */
+  --text:    #1c1714;
+  --text2:   #6b5f52;
+  --text3:   #a8998a;
+
+  /* Brand — deep warm gold */
+  --amber:      #b07d2e;
+  --amber2:     #8f6320;
+  --amber-light:#fef6e4;
+  --amber-mid:  #fde9b0;
+  --amber-dim:  rgba(176,125,46,.10);
+  --amber-glow: rgba(176,125,46,.22);
+
+  /* Status */
+  --success:#15803d;  --success-bg:#f0fdf4;
+  --danger: #b91c1c;  --danger-bg: #fef2f2;
+  --info:   #1d4ed8;  --info-bg:   #eff6ff;
+
+  /* Radii */
+  --r-xs:5px; --r-sm:10px; --r:16px; --r-lg:22px; --r-xl:28px;
+
+  /* Shadows */
+  --sh-xs: 0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05);
+  --sh-sm: 0 2px 8px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.05);
+  --sh:    0 4px 20px rgba(0,0,0,.10),0 2px 8px rgba(0,0,0,.06);
+  --sh-lg: 0 12px 40px rgba(0,0,0,.14),0 4px 12px rgba(0,0,0,.08);
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;line-height:1.5;
+}
+
+/* ── SCREENS ─────────────────────────────────────────────── */
+.screen{display:none;width:100%;height:100%;position:fixed;inset:0;flex-direction:column}
+.screen.active{display:flex}
+.screen-scroll{overflow-y:auto}
+
+/* ── SETUP LAYOUT ────────────────────────────────────────── */
+.setup-wrap{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100%;padding:24px 20px;
+  background:
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(176,125,46,.12) 0%,transparent 70%),
+    var(--bg);
+}
+.card{
+  width:100%;max-width:460px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:38px 34px;
+  box-shadow:var(--sh-lg);
+}
+
+/* ── LOGO ────────────────────────────────────────────────── */
+.logo{display:flex;align-items:center;gap:13px;margin-bottom:28px}
+.logo-mark{
+  width:46px;height:46px;
+  background:linear-gradient(135deg,#c9952e,#9a6f1e);
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(176,125,46,.35);
+}
+.logo-text{font-family:'Playfair Display',serif;font-size:25px;font-weight:700;color:var(--text)}
+.logo-sub{font-size:11px;color:var(--text3);letter-spacing:.5px;margin-top:1px}
+
+/* ── HEADINGS ────────────────────────────────────────────── */
+h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;line-height:1.3;margin-bottom:8px}
+h2{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;margin-bottom:8px}
+.subtitle{color:var(--text2);font-size:13px;margin-bottom:24px;line-height:1.65}
+
+.steps{display:flex;gap:5px;margin-bottom:24px}
+.step-dot{height:3px;flex:1;background:var(--border);border-radius:2px;transition:background .3s}
+.step-dot.active{background:var(--amber)}
+
+/* ── FORM ELEMENTS ───────────────────────────────────────── */
+.field{margin-bottom:16px}
+label{
+  display:block;font-size:11px;font-weight:600;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px;
+}
+input[type=text],input[type=password],textarea,select{
+  width:100%;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:var(--r-sm);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:14px;
+  padding:12px 14px;outline:none;
+  transition:border-color .2s,box-shadow .2s,background .2s;
+}
+input:focus,textarea:focus,select:focus{
+  border-color:var(--amber);
+  box-shadow:0 0 0 3px var(--amber-dim);
+  background:var(--surface);
+}
+textarea{resize:none;font-size:12px;font-family:'Courier New',monospace;min-height:96px}
+select{
+  cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a8998a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:36px;
+}
+::placeholder{color:var(--text3)}
+optgroup{color:var(--text3);font-size:11px;font-weight:600}
+option{color:var(--text);background:var(--surface)}
+
+/* ── BUTTONS ─────────────────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:12px 20px;border-radius:var(--r-sm);border:none;
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;transition:all .15s;text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn-full{width:100%}
+.btn-primary{
+  background:linear-gradient(135deg,#c9952e,#a07020);
+  color:#fff;font-weight:600;
+  box-shadow:0 3px 12px rgba(176,125,46,.30);
+}
+.btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 5px 18px rgba(176,125,46,.38)}
+.btn-primary:active{transform:none;filter:none}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--border2);background:var(--surface3)}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-ai{
+  background:var(--amber-light);color:var(--amber2);
+  border:1.5px solid var(--amber-mid);
+  font-weight:600;font-size:12px;padding:7px 14px;white-space:nowrap;
+}
+.btn-ai:hover{background:var(--amber-mid)}
+.btn-ai:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── COLOR SWATCHES ──────────────────────────────────────── */
+.color-swatches{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
+.swatch{width:32px;height:32px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
+.swatch:hover{transform:scale(1.15)}
+.swatch.sel{border-color:var(--text);transform:scale(1.1);box-shadow:0 0 0 3px rgba(0,0,0,.12)}
+
+/* ── INFO BOX ────────────────────────────────────────────── */
+.info-box{
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:14px 16px;margin-bottom:18px;
+  font-size:12.5px;color:var(--text2);line-height:1.7;
+}
+.info-box strong{color:var(--text)}
+.info-box a{color:var(--amber2);text-decoration:none;font-weight:500}
+.info-box a:hover{text-decoration:underline}
+.info-box ol{padding-left:16px}
+.info-box li{margin-bottom:4px}
+
+/* ── DIVIDER / JOIN BANNER ───────────────────────────────── */
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.join-banner{
+  background:var(--amber-light);border:1.5px solid var(--amber-mid);
+  border-radius:var(--r-sm);padding:10px 14px;margin-bottom:18px;
+  font-size:12px;color:var(--amber2);display:none;font-weight:500;
+}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+.toggle-info .tl{font-size:13px;font-weight:500}
+.toggle-info .td{font-size:11px;color:var(--text3);margin-top:2px}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:var(--border2);border-radius:12px;cursor:pointer;transition:background .2s;border:1px solid var(--border2)}
+.toggle-track::before{content:'';position:absolute;width:18px;height:18px;left:2px;top:2px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:var(--sh-xs)}
+.toggle input:checked+.toggle-track{background:var(--amber);border-color:var(--amber2)}
+.toggle input:checked+.toggle-track::before{transform:translateX(20px)}
+.row{display:flex;gap:9px;align-items:flex-end}
+.flex-1{flex:1;min-width:0}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt18{margin-top:18px}
+.small{font-size:12px;color:var(--text2);line-height:1.6}
+a{color:var(--amber2);text-decoration:none}
+
+/* ── ROOMS SCREEN ─────────────────────────────────────────── */
+.rooms-header{
+  padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+  background:var(--surface);
+  border-bottom:1.5px solid var(--border);
+  box-shadow:var(--sh-xs);
+}
+.rooms-body{flex:1;overflow-y:auto;padding:16px 20px 24px}
+
+.room-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:var(--r);
+  padding:16px 18px;margin-bottom:10px;
+  cursor:pointer;
+  transition:border-color .15s,box-shadow .15s,transform .12s;
+  display:flex;align-items:center;gap:14px;
+  box-shadow:var(--sh-xs);
+}
+.room-card:hover{
+  border-color:var(--amber);
+  box-shadow:0 4px 16px rgba(176,125,46,.14);
+  transform:translateY(-1px);
+}
+.room-card-icon{
+  width:46px;height:46px;
+  background:linear-gradient(135deg,var(--amber-light),var(--amber-mid));
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+  border:1.5px solid var(--amber-mid);
+}
+.room-card-info{flex:1;min-width:0}
+.room-card-name{
+  font-weight:600;font-size:15px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--text);
+}
+.room-card-meta{font-size:11px;color:var(--text3);margin-top:3px;letter-spacing:.3px}
+.room-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.room-card-badge{
+  font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;
+  letter-spacing:.5px;white-space:nowrap;
+}
+.badge-host{background:var(--amber-light);color:var(--amber2);border:1.5px solid var(--amber-mid)}
+.badge-member{background:var(--info-bg);color:var(--info);border:1.5px solid rgba(29,78,216,.2)}
+.room-del-btn{
+  font-size:10px;color:var(--text3);background:none;border:1px solid var(--border);
+  border-radius:var(--r-xs);padding:3px 8px;cursor:pointer;transition:all .12s;white-space:nowrap;
+}
+.room-del-btn:hover{border-color:var(--danger);color:var(--danger)}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state .es-icon{font-size:44px;margin-bottom:14px;opacity:.5}
+.empty-state .es-title{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px;color:var(--text2)}
+.empty-state .es-sub{font-size:13px;line-height:1.7}
+
+/* ── CHAT HEADER ─────────────────────────────────────────── */
+.chat-header{
+  background:var(--surface);
+  border-bottom:1.5px solid var(--border);
+  padding:10px 14px;
+  display:flex;align-items:center;gap:9px;flex-shrink:0;
+  box-shadow:var(--sh-xs);z-index:10;
+}
+.chat-logo{
+  font-family:'Playfair Display',serif;font-size:18px;font-weight:700;
+  color:var(--amber2);white-space:nowrap;
+}
+.room-name-pill{
+  font-size:12px;color:var(--text2);
+  background:var(--surface2);border:1.5px solid var(--border);
+  padding:4px 11px;border-radius:20px;
+  max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.hdr-spacer{flex:1}
+.hdr-btn{
+  background:none;border:none;color:var(--text3);cursor:pointer;
+  padding:7px;border-radius:var(--r-sm);font-size:17px;line-height:1;
+  transition:color .15s,background .15s;position:relative;flex-shrink:0;
+}
+.hdr-btn:hover{color:var(--text);background:var(--surface3)}
+.hdr-btn .badge-count{
+  position:absolute;top:2px;right:2px;
+  background:var(--amber);color:#fff;
+  font-size:9px;font-weight:700;
+  min-width:15px;height:15px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;padding:0 3px;
+}
+
+/* ── AI BAR ──────────────────────────────────────────────── */
+.ai-bar{
+  background:var(--amber-light);
+  border-bottom:1.5px solid var(--amber-mid);
+  padding:7px 14px;display:flex;align-items:center;gap:9px;flex-shrink:0;
+}
+.ai-bar-tag{
+  font-size:10px;font-weight:700;color:var(--amber2);
+  text-transform:uppercase;letter-spacing:.7px;white-space:nowrap;
+}
+.mini-select{
+  flex:1;background:var(--surface);border:1.5px solid var(--border2);
+  border-radius:var(--r-sm);color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:11px;padding:6px 24px 6px 9px;outline:none;cursor:pointer;
+  appearance:none;min-width:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%23a8998a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  transition:border-color .2s;
+}
+.mini-select:focus{border-color:var(--amber);outline:none}
+.auto-wrap{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.auto-wrap .toggle{width:36px;height:20px}
+.auto-wrap .toggle-track{border-color:var(--border2)}
+.auto-wrap .toggle-track::before{width:14px;height:14px;left:2px;top:2px}
+.auto-wrap .toggle input:checked+.toggle-track::before{transform:translateX(16px)}
+.auto-lbl{font-size:11px;color:var(--text2)}
+
+/* ── MESSAGES ────────────────────────────────────────────── */
+.msgs{
+  flex:1;overflow-y:auto;padding:16px 14px;
+  display:flex;flex-direction:column;gap:2px;
+  background:var(--bg);
+}
+.msgs::-webkit-scrollbar{width:4px}
+.msgs::-webkit-scrollbar-track{background:transparent}
+.msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+.msg-sys{
+  text-align:center;font-size:11px;color:var(--text3);
+  padding:10px 0;letter-spacing:.3px;
+  display:flex;align-items:center;gap:12px;
+}
+.msg-sys::before,.msg-sys::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.msg-u{
+  display:flex;flex-direction:column;
+  max-width:78%;margin-bottom:3px;
+  animation:msgIn .18s ease;
+}
+.msg-u.own{align-self:flex-end;align-items:flex-end}
+.msg-u.other{align-self:flex-start;align-items:flex-start}
+
+.msg-meta{
+  display:flex;align-items:center;gap:5px;
+  margin-bottom:3px;font-size:11px;color:var(--text3);
+}
+.msg-meta .name{font-weight:600;font-size:11px}
+.msg-meta .time{font-size:10px}
+
+/* Bubbles */
+.bubble{
+  padding:10px 14px;border-radius:20px;
+  font-size:14px;line-height:1.56;
+  word-wrap:break-word;white-space:pre-wrap;
+  max-width:100%;position:relative;
+}
+.own .bubble{
+  border-bottom-right-radius:5px;
+  box-shadow:var(--sh-xs);
+}
+.other .bubble{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-bottom-left-radius:5px;
+  color:var(--text);
+  box-shadow:var(--sh-xs);
+}
+
+/* Quote bar */
+.quote-bar{
+  background:rgba(176,125,46,.08);
+  border-left:3px solid var(--amber);
+  border-radius:0 8px 8px 0;
+  padding:6px 10px;margin-bottom:8px;
+  font-size:12px;line-height:1.4;
+}
+.quote-bar .quote-name{font-weight:600;color:var(--amber2);margin-bottom:2px;font-size:11px}
+.quote-bar .quote-text{
+  color:var(--text2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:220px;
+}
+
+/* Translation */
+.trans-line{
+  font-size:12px;color:var(--text2);margin-top:7px;font-style:italic;
+  border-top:1px solid var(--border);padding-top:7px;line-height:1.5;
+}
+
+/* Message actions */
+.msg-actions{
+  display:none;position:absolute;right:8px;bottom:calc(100% + 4px);
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:4px;z-index:50;
+  white-space:nowrap;box-shadow:var(--sh);
+}
+.msg-u:hover .msg-actions,.msg-u:focus-within .msg-actions{display:flex;gap:2px}
+.msg-action-btn{
+  background:none;border:none;color:var(--text2);cursor:pointer;
+  padding:5px 8px;border-radius:var(--r-xs);font-size:13px;transition:all .12s;
+}
+.msg-action-btn:hover{background:var(--surface3);color:var(--text)}
+
+/* AI message */
+.msg-ai{
+  align-self:stretch;
+  background:var(--surface);
+  border:1.5px solid var(--amber-mid);
+  border-radius:var(--r);
+  padding:18px 20px;margin:12px 0;
+  animation:msgIn .25s ease;
+  box-shadow:0 3px 14px rgba(176,125,46,.10);
+  position:relative;
+}
+.msg-ai::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--amber-mid),var(--amber),var(--amber-mid));
+  border-radius:var(--r) var(--r) 0 0;
+}
+.ai-hdr{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.ai-av{
+  width:32px;height:32px;
+  background:linear-gradient(135deg,#c9952e,#9a6f1e);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(176,125,46,.3);
+}
+.ai-name{font-size:13px;font-weight:700;color:var(--amber2)}
+.ai-model-tag{
+  font-size:10px;color:var(--text3);
+  background:var(--surface2);border:1px solid var(--border);
+  padding:2px 8px;border-radius:20px;margin-left:auto;
+}
+.ai-body{font-size:14px;line-height:1.75;color:var(--text)}
+.ai-body p{margin-bottom:10px}
+.ai-body p:last-child{margin-bottom:0}
+.ai-body strong{color:var(--amber2);font-weight:600}
+.ai-body em{color:var(--text2);font-style:italic}
+.ai-body ul,.ai-body ol{padding-left:18px;margin-bottom:10px}
+.ai-body li{margin-bottom:5px}
+
+/* Thinking */
+.thinking{
+  align-self:stretch;
+  background:var(--amber-light);
+  border:1.5px solid var(--amber-mid);
+  border-radius:var(--r);
+  padding:13px 18px;margin:8px 0;
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;color:var(--amber2);
+}
+.dots{display:flex;gap:5px}
+.dot{width:7px;height:7px;background:var(--amber);border-radius:50%;animation:blink 1.4s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+
+/* ── REPLY BAR ───────────────────────────────────────────── */
+.reply-bar{
+  background:var(--amber-light);border-top:1.5px solid var(--amber-mid);
+  padding:9px 14px;display:none;align-items:center;gap:10px;flex-shrink:0;
+}
+.reply-bar.visible{display:flex}
+.reply-preview{flex:1;min-width:0;font-size:12px;line-height:1.4}
+.reply-preview .rp-name{font-weight:600;color:var(--amber2);font-size:11px}
+.reply-preview .rp-text{
+  color:var(--text2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:240px;
+  display:block;
+}
+.reply-cancel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:2px;line-height:1;flex-shrink:0}
+.reply-cancel:hover{color:var(--text2)}
+
+/* ── INPUT AREA ──────────────────────────────────────────── */
+.input-area{
+  background:var(--surface);
+  border-top:1.5px solid var(--border);
+  padding:10px 14px;
+  padding-bottom:max(10px,env(safe-area-inset-bottom));
+  display:flex;gap:9px;align-items:flex-end;flex-shrink:0;
+  box-shadow:0 -2px 12px rgba(0,0,0,.06);
+}
+.input-shell{
+  flex:1;
+  background:var(--surface2);
+  border:1.5px solid var(--border);
+  border-radius:24px;
+  padding:10px 14px;
+  display:flex;align-items:flex-end;gap:6px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.input-shell:focus-within{
+  border-color:var(--amber);
+  box-shadow:0 0 0 3px var(--amber-dim);
+}
+#msg-input{
+  flex:1;background:none;border:none;color:var(--text);
+  font-family:'DM Sans',sans-serif;font-size:14px;outline:none;
+  resize:none;max-height:110px;overflow-y:auto;line-height:1.45;
+}
+#msg-input::placeholder{color:var(--text3)}
+.emoji-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;padding:2px;flex-shrink:0;transition:color .15s}
+.emoji-btn:hover{color:var(--amber2)}
+.send-btn{
+  width:40px;height:40px;
+  background:linear-gradient(135deg,#c9952e,#9a6f1e);
+  border:none;border-radius:50%;color:#fff;font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-bottom:1px;transition:all .15s;
+  box-shadow:0 3px 10px rgba(176,125,46,.30);
+}
+.send-btn:hover{filter:brightness(1.1);transform:scale(1.07)}
+.send-btn:active{transform:scale(.93)}
+
+/* ── EMOJI PICKER ────────────────────────────────────────── */
+.emoji-picker{
+  position:absolute;bottom:72px;left:14px;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:12px;z-index:100;
+  display:none;width:280px;max-height:220px;overflow-y:auto;
+  box-shadow:var(--sh-lg);
+}
+.emoji-picker.open{display:block;animation:fadeUp .15s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.emoji-grid{display:flex;flex-wrap:wrap;gap:3px}
+.emoji-item{font-size:22px;cursor:pointer;padding:4px;border-radius:var(--r-xs);transition:background .1s;line-height:1}
+.emoji-item:hover{background:var(--surface3)}
+
+/* ── SLIDE PANEL (participants) ──────────────────────────── */
+.slide-panel{
+  position:fixed;top:0;right:-320px;width:300px;max-width:90vw;height:100%;
+  background:var(--surface);border-left:1.5px solid var(--border);
+  z-index:400;transition:right .25s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;
+  box-shadow:none;
+}
+.slide-panel.open{right:0;box-shadow:-6px 0 24px rgba(0,0,0,.12)}
+.panel-header{
+  padding:16px 18px;border-bottom:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  background:var(--surface);
+}
+.panel-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600}
+.panel-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px;line-height:1;padding:4px;border-radius:var(--r-xs);transition:background .15s}
+.panel-close:hover{background:var(--surface3)}
+.panel-body{flex:1;overflow-y:auto;padding:14px;background:var(--surface)}
+.member-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.member-row:last-child{border-bottom:none}
+.member-av{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;border:2px solid rgba(255,255,255,.8);box-shadow:var(--sh-xs)}
+.member-info{flex:1;min-width:0}
+.member-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.member-status{font-size:11px;color:var(--text3);margin-top:1px}
+.member-role{font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.5px;flex-shrink:0}
+.role-host{background:var(--amber-light);color:var(--amber2);border:1px solid var(--amber-mid)}
+.role-member{background:var(--info-bg);color:var(--info);border:1px solid rgba(29,78,216,.2)}
+.member-actions{display:flex;gap:4px}
+.ma-btn{background:none;border:1.5px solid var(--border);color:var(--text2);cursor:pointer;padding:3px 9px;border-radius:var(--r-xs);font-size:11px;transition:all .12s}
+.ma-btn:hover{border-color:var(--amber);color:var(--amber2)}
+.ma-btn.danger:hover{border-color:var(--danger);color:var(--danger)}
+
+/* ── OVERLAYS / MODALS ───────────────────────────────────── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(28,23,20,.5);backdrop-filter:blur(4px);
+  z-index:500;align-items:center;justify-content:center;padding:20px;
+}
+.overlay.show{display:flex;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-xl);padding:30px;
+  max-width:440px;width:100%;max-height:90vh;overflow-y:auto;
+  box-shadow:var(--sh-lg);
+  animation:modalIn .2s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal h3{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:5px}
+.modal .subtitle{margin-bottom:18px}
+
+.share-box{
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:12px 14px;
+  font-size:11px;font-family:monospace;color:var(--text2);
+  word-break:break-all;margin-bottom:13px;cursor:pointer;
+  transition:border-color .2s;line-height:1.6;
+}
+.share-box:hover{border-color:var(--amber)}
+
+.trans-mode-row{display:flex;gap:7px;margin-top:10px}
+.trans-mode-btn{
+  flex:1;padding:9px 5px;border:1.5px solid var(--border);border-radius:var(--r-sm);
+  background:var(--surface2);color:var(--text2);cursor:pointer;
+  font-size:12px;text-align:center;transition:all .15s;
+}
+.trans-mode-btn.sel{border-color:var(--amber);color:var(--amber2);background:var(--amber-light)}
+
+.settings-section{
+  font-size:11px;font-weight:600;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.7px;
+  margin-bottom:12px;margin-top:20px;
+  padding-bottom:8px;border-bottom:1px solid var(--border);
+}
+.settings-section:first-child{margin-top:0}
+
+/* ── NOTIFICATION ────────────────────────────────────────── */
+.notif{
+  position:fixed;top:14px;left:50%;
+  transform:translateX(-50%) translateY(-80px);
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);padding:11px 20px;
+  font-size:13px;font-weight:500;
+  max-width:320px;width:90%;text-align:center;
+  z-index:900;transition:transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:var(--sh-lg);pointer-events:none;
+}
+.notif.show{transform:translateX(-50%) translateY(0)}
+.notif.err{border-color:rgba(185,28,28,.3);color:var(--danger);background:var(--danger-bg)}
+.notif.ok{border-color:rgba(21,128,61,.3);color:var(--success);background:var(--success-bg)}
+.notif.info{border-color:var(--amber-mid);color:var(--amber2);background:var(--amber-light)}
+
+/* ── SUMMARY INDICATOR ───────────────────────────────────── */
+.summary-pill{
+  position:fixed;bottom:80px;right:14px;z-index:200;
+  background:var(--amber-light);border:1.5px solid var(--amber-mid);
+  border-radius:20px;padding:5px 12px;
+  font-size:11px;color:var(--amber2);font-weight:500;
+  display:none;align-items:center;gap:6px;
+  box-shadow:var(--sh-sm);
+}
+.summary-pill.visible{display:flex}
+.summary-spinner{
+  width:10px;height:10px;border:2px solid var(--amber-mid);
+  border-top-color:var(--amber2);border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ANIMATIONS ──────────────────────────────────────────── */
+@keyframes msgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── MOBILE ──────────────────────────────────────────────── */
+@media(max-width:480px){
+  .card{padding:26px 20px;border-radius:var(--r-lg)}
+  h1{font-size:22px}
+  .msg-u{max-width:88%}
+  .chat-logo{font-size:16px}
+  .ai-bar-tag{display:none}
+  .room-name-pill{max-width:100px}
+}
+</style>
+</style>
+</head>
+<body>
+<!-- ============================================================
+     SCREEN 1: NAME
+     ============================================================ -->
+<div id="screen-name" class="screen screen-scroll">
+<div class="setup-wrap">
+<div class="card">
+  <div class="logo"><div class="logo-mark">⚖️</div><div><div class="logo-text">Accord</div><div class="logo-sub">AI-Mediated Dialogue</div></div></div>
+  <div class="join-banner" id="join-banner">🔗 You've been invited to a dialogue room. Enter your name to join.</div>
+  <h1>What should we call you?</h1>
+  <p class="subtitle">Your name and colour will be visible to others in the conversation.</p>
+  <div class="field"><label>Your Name</label><input type="text" id="inp-name" placeholder="e.g. Alex" maxlength="28" autocomplete="off"></div>
+  <div class="field"><label>Pick Your Colour</label><div class="color-swatches" id="color-picker"></div></div>
+  <div class="field mt12"><label>Your Language (for translation)</label><select id="inp-lang"><!-- JS fills --></select></div>
+  <button class="btn btn-primary btn-full mt18" onclick="submitName()">Continue →</button>
+</div></div></div>
+
+<!-- ============================================================
+     SCREEN 2: FIREBASE
+     ============================================================ -->
+<div id="screen-firebase" class="screen screen-scroll" style="display:none!important">
+<div class="setup-wrap">
+<div class="card">
+  <div class="logo"><div class="logo-mark">⚖️</div><div><div class="logo-text">Accord</div></div></div>
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot active"></div><div class="step-dot"></div></div>
+  <h2>Connect Firebase</h2>
+  <p class="subtitle">One-time setup — takes 2 minutes. Free for small groups.</p>
+  <div class="info-box">
+    <ol>
+      <li>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a></li>
+      <li>Create project → <strong>Firestore Database</strong> → <strong>Start in test mode</strong></li>
+      <li>⚙️ Project Settings → Your apps → <strong>&lt;/&gt; Web</strong> → Register app</li>
+      <li>Copy the <code>firebaseConfig</code> object and paste below (JS or JSON both work)</li>
+    </ol>
+  </div>
+  <div class="field"><label>Firebase Config</label>
+    <textarea id="inp-fb" placeholder='const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "...",
+  projectId: "...",
+  ...
+}'></textarea>
+  </div>
+  <button class="btn btn-primary btn-full" onclick="submitFirebase()">Connect & Continue →</button>
+</div></div></div>
+
+<!-- ============================================================
+     SCREEN 3: ROOMS LIST
+     ============================================================ -->
+<div id="screen-rooms" class="screen">
+<div class="rooms-header">
+  <div class="logo" style="margin-bottom:0"><div class="logo-mark" style="width:36px;height:36px;font-size:17px">⚖️</div><div><div class="logo-text" style="font-size:20px">Accord</div></div></div>
+  <button class="btn btn-primary" onclick="showScreen('screen-setup')" style="padding:9px 16px;font-size:13px">+ New Room</button>
+</div>
+<div class="rooms-body" id="rooms-body">
+  <div class="empty-state">
+    <div class="es-icon">💬</div>
+    <div class="es-title">No rooms yet</div>
+    <div class="es-sub">Create a room and invite others,<br>or join an existing room with a code.</div>
+  </div>
+</div>
+<div style="padding:0 20px 24px">
+  <div class="divider">join by code</div>
+  <div class="row">
+    <div class="field flex-1" style="margin-bottom:0"><input type="text" id="inp-join" placeholder="Enter room code" style="text-transform:uppercase;letter-spacing:2px"></div>
+    <button class="btn btn-secondary" onclick="doJoinByCode()" style="height:43px;margin-top:0">Join</button>
+  </div>
+</div>
+</div>
+
+<!-- ============================================================
+     SCREEN 4: ROOM SETUP
+     ============================================================ -->
+<div id="screen-setup" class="screen screen-scroll">
+<div class="setup-wrap">
+<div class="card">
+  <div class="logo"><div class="logo-mark">⚖️</div><div><div class="logo-text">Accord</div></div></div>
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot active"></div></div>
+  <h2>Create a Room</h2>
+  <p class="subtitle">Configure your AI mediator. You'll be the host.</p>
+  <div class="field"><label>Room Name</label><input type="text" id="inp-roomname" placeholder="e.g. Weekend Dispute, Work Discussion" maxlength="40"></div>
+  <div class="field"><label>OpenRouter API Key</label>
+    <input type="password" id="inp-or-key" placeholder="sk-or-v1-...">
+    <div class="small mt8">Get a free key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> — access 100+ models. Free models cost $0.</div>
+  </div>
+  <div class="field"><label>AI Mediator Model</label><select id="inp-model"><!-- JS fills --></select>
+    <div class="small mt8">💡 <strong>Free:</strong> Llama, Gemma, Mistral free tier — $0. <strong>Cheap:</strong> Haiku, GPT-4o Mini. <strong>Best:</strong> Claude Sonnet, GPT-4o.</div>
+  </div>
+  <div class="toggle-row">
+    <div class="toggle-info"><div class="tl">Auto Mediator</div><div class="td">AI weighs in automatically every N messages</div></div>
+    <label class="toggle"><input type="checkbox" id="tog-auto" checked><span class="toggle-track"></span></label>
+  </div>
+  <div class="field mt12" id="interval-field">
+    <label>AI speaks after every…</label>
+    <select id="inp-interval"><option value="3">3 messages</option><option value="5" selected>5 messages</option><option value="8">8 messages</option><option value="15">15 messages</option></select>
+  </div>
+  <div class="toggle-row">
+    <div class="toggle-info"><div class="tl">Open Room</div><div class="td">Anyone with the link can join without approval</div></div>
+    <label class="toggle"><input type="checkbox" id="tog-open" checked><span class="toggle-track"></span></label>
+  </div>
+  <button class="btn btn-primary btn-full mt18" onclick="doCreateRoom()">✦ Create Room</button>
+  <button class="btn btn-ghost btn-full mt8" onclick="showScreen('screen-rooms')">← Back</button>
+</div></div></div>
+
+<!-- ============================================================
+     SCREEN 5: CHAT
+     ============================================================ -->
+<div id="screen-chat" class="screen">
+  <!-- Header -->
+  <div class="chat-header">
+    <span class="chat-logo">⚖️</span>
+    <span class="room-name-pill" id="room-name-pill">Room</span>
+    <div class="hdr-spacer"></div>
+    <button class="hdr-btn" onclick="toggleParticipants()" title="Participants" id="part-btn">👥<span class="badge-count" id="part-count">0</span></button>
+    <button class="hdr-btn" onclick="showShareModal()" title="Invite">🔗</button>
+    <button class="hdr-btn" onclick="showThemeModal()" title="Theme">🎨</button>
+    <button class="hdr-btn" onclick="showSettingsModal()" title="Settings">⚙️</button>
+    <button class="hdr-btn" onclick="goRooms()" title="All rooms" style="font-size:14px">⬅</button>
+  </div>
+  <!-- AI Bar -->
+  <div class="ai-bar">
+    <span class="ai-bar-tag">AI</span>
+    <select class="mini-select" id="chat-model-sel" onchange="onModelChange(this.value)"><!-- JS fills --></select>
+    <div class="auto-wrap">
+      <label class="toggle"><input type="checkbox" id="chat-auto-tog" onchange="onAutoToggle(this.checked)"><span class="toggle-track"></span></label>
+      <span class="auto-lbl" id="auto-lbl">Auto</span>
+    </div>
+    <button class="btn btn-ai" id="ask-btn" onclick="invokeAI()">⚖️ Ask</button>
+  </div>
+  <!-- Messages -->
+  <div class="msgs" id="msgs" style="position:relative"></div>
+  <!-- Emoji picker (positioned above input) -->
+  <div class="emoji-picker" id="emoji-picker"></div>
+  <!-- Reply bar -->
+  <div class="reply-bar" id="reply-bar">
+    <div style="font-size:16px;color:var(--accent)">↩</div>
+    <div class="reply-preview"><div class="rp-name" id="rp-name"></div><div class="rp-text" id="rp-text"></div></div>
+    <button class="reply-cancel" onclick="S.editMode ? cancelEdit() : cancelReply()">✕</button>
+  </div>
+  <!-- Input -->
+  <div class="input-area">
+    <div class="input-shell">
+      <button class="emoji-btn" onclick="toggleEmojiPicker()" title="Emoji">😊</button>
+      <textarea id="msg-input" rows="1" placeholder="Share your thoughts…" onkeydown="onInputKey(event)" oninput="autoGrow(this)"></textarea>
+    </div>
+    <button class="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- Summary indicator -->
+<div class="summary-pill" id="summary-pill">
+  <div class="summary-spinner"></div>
+  <span>Updating memory…</span>
+</div>
+
+<!-- ============================================================
+     PARTICIPANTS PANEL
+     ============================================================ -->
+<div class="slide-panel" id="participants-panel">
+  <div class="panel-header">
+    <span class="panel-title">Participants</span>
+    <button class="panel-close" onclick="toggleParticipants()">✕</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</div>
+<div id="panel-overlay" style="display:none;position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.4)" onclick="toggleParticipants()"></div>
+
+<!-- ============================================================
+     MODAL: SHARE / INVITE
+     ============================================================ -->
+<div class="overlay" id="overlay-share" onclick="closeOverlay('overlay-share',event)">
+<div class="modal">
+  <h3>Invite People</h3>
+  <p class="subtitle">Share this room link — Firebase config is embedded so anyone who opens it just enters their name and joins.</p>
+  <div class="share-box" id="share-link-txt" onclick="copyLink()">Loading…</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+    <button class="btn btn-primary" onclick="copyLink()" style="font-size:12px;padding:10px 6px">📋 Copy</button>
+    <button class="btn btn-secondary" onclick="whatsappShare()" style="font-size:12px;padding:10px 6px;background:rgba(37,211,102,.1);color:#1a8f44;border-color:rgba(37,211,102,.3)">💬 WhatsApp</button>
+    <button class="btn btn-secondary" onclick="nativeShare()" style="font-size:12px;padding:10px 6px">📤 Share…</button>
+  </div>
+  <div class="info-box" style="margin-bottom:14px">
+    <strong>Room Code:</strong> <span id="share-code" style="font-family:monospace;color:var(--amber2);letter-spacing:2px;font-size:16px;font-weight:700"></span><br>
+    <span style="font-size:11px;color:var(--text3)">Give just this code to someone who already has the app open.</span>
+  </div>
+  <details style="margin-bottom:14px">
+    <summary style="font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;padding:8px 0;list-style:none">
+      ❓ How do others open this app?
+    </summary>
+    <div class="info-box" style="margin-top:8px;margin-bottom:0">
+      The app is a <strong>single HTML file</strong> — no install, opens in any browser.<br><br>
+      <strong>To create a permanent shareable link in 2 minutes:</strong>
+      <ol style="margin-top:6px">
+        <li>Go to <a href="https://netlify.com/drop" target="_blank">netlify.com/drop</a></li>
+        <li>Drag &amp; drop your <code>accord_v2.html</code> file onto the page</li>
+        <li>You instantly get a free URL like <code>sunny-dawn-12345.netlify.app</code></li>
+        <li>Anyone can open that URL on their phone or laptop — no download, no install</li>
+      </ol>
+      <br>The <strong>room invite link above</strong> works once they have the app open at your hosted URL.
+    </div>
+  </details>
+  <button class="btn btn-ghost btn-full" onclick="closeOverlayById('overlay-share')">Done</button>
+</div></div>
+
+<!-- ============================================================
+     MODAL: SETTINGS
+     ============================================================ -->
+<div class="overlay" id="overlay-settings" onclick="closeOverlay('overlay-settings',event)">
+<div class="modal">
+  <h3>Settings</h3>
+  <p class="subtitle">AI configuration and translation preferences.</p>
+
+  <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px">🤖 AI Mediator</div>
+  <div class="field"><label>OpenRouter API Key</label><input type="password" id="s-or-key" placeholder="sk-or-v1-..."></div>
+  <div class="field"><label>Model</label><select id="s-model"><!-- JS fills --></select></div>
+  <div class="field"><label>Auto interval</label><select id="s-interval"><option value="3">Every 3 messages</option><option value="5">Every 5 messages</option><option value="8">Every 8 messages</option><option value="15">Every 15 messages</option></select></div>
+  <div class="toggle-row" style="margin-bottom:18px"><div class="toggle-info"><div class="tl">Auto Mediator</div></div><label class="toggle"><input type="checkbox" id="s-auto"><span class="toggle-track"></span></label></div>
+
+  <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px">🌍 Translation</div>
+  <div class="field"><label>Your Language</label><select id="s-lang"><!-- JS fills --></select></div>
+  <div class="field"><label>Show Messages As</label>
+    <div class="trans-mode-row">
+      <button class="trans-mode-btn sel" id="tm-original" onclick="setTransMode('original')">Original</button>
+      <button class="trans-mode-btn" id="tm-both" onclick="setTransMode('both')">Both</button>
+      <button class="trans-mode-btn" id="tm-translated" onclick="setTransMode('translated')">Translated</button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-full mt18" onclick="saveSettings()">Save Settings</button>
+  <button class="btn btn-ghost btn-full mt8" onclick="closeOverlayById('overlay-settings')">Cancel</button>
+</div></div>
+
+
+<!-- ============================================================
+     MODAL: THEME PICKER
+     ============================================================ -->
+<div class="overlay" id="overlay-theme" onclick="closeOverlay('overlay-theme',event)">
+<div class="modal">
+  <h3>Choose Theme</h3>
+  <p class="subtitle">Picks are saved and synced to your device.</p>
+  <div class="theme-grid">
+    <div class="theme-chip" id="tc-paper" onclick="applyTheme('')">
+      <div class="theme-preview" style="background:linear-gradient(135deg,#f0ebe2,#e8ddd0)">📜</div>
+      <div class="theme-label">Paper</div>
+    </div>
+    <div class="theme-chip" id="tc-midnight" onclick="applyTheme('midnight')">
+      <div class="theme-preview" style="background:linear-gradient(135deg,#0c0f1a,#1a2235)">🌙</div>
+      <div class="theme-label">Midnight</div>
+    </div>
+    <div class="theme-chip" id="tc-neon" onclick="applyTheme('neon')">
+      <div class="theme-preview" style="background:linear-gradient(135deg,#080010,#240038)">⚡</div>
+      <div class="theme-label">Neon Tokyo</div>
+    </div>
+    <div class="theme-chip" id="tc-sakura" onclick="applyTheme('sakura')">
+      <div class="theme-preview" style="background:linear-gradient(135deg,#fff5f7,#ffe4ea)">🌸</div>
+      <div class="theme-label">Sakura</div>
+    </div>
+    <div class="theme-chip" id="tc-forest" onclick="applyTheme('forest')">
+      <div class="theme-preview" style="background:linear-gradient(135deg,#0a120a,#1a2a1a)">🌿</div>
+      <div class="theme-label">Forest</div>
+    </div>
+    <div class="theme-chip" id="tc-ocean" onclick="applyTheme('ocean')">
+      <div class="theme-preview" style="background:linear-gradient(135deg,#eef8ff,#bae6fd)">🌊</div>
+      <div class="theme-label">Ocean</div>
+    </div>
+    <div class="theme-chip" id="tc-obsidian" onclick="applyTheme('obsidian')">
+      <div class="theme-preview" style="background:linear-gradient(135deg,#000,#222)">🖤</div>
+      <div class="theme-label">Obsidian</div>
+    </div>
+  </div>
+  <button class="btn btn-ghost btn-full mt18" onclick="closeOverlayById('overlay-theme')">Done</button>
+</div></div>
+<div class="notif" id="notif"></div>
+
+<script>
+
+// ============================================================
+// THEME SYSTEM
+// ============================================================
+const THEMES = ['paper','midnight','neon','sakura','forest','ocean','obsidian'];
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('accord_theme', theme);
+  // Update active chip in picker
+  THEMES.forEach(t => {
+    const chip = document.getElementById('tc-' + (t === 'paper' ? 'paper' : t));
+    if (chip) chip.classList.toggle('active', t === (theme || 'paper'));
+  });
+}
+
+function showThemeModal() {
+  // Mark current theme active
+  const current = localStorage.getItem('accord_theme') || 'paper';
+  applyTheme(current); // refreshes chip highlights
+  document.getElementById('overlay-theme').classList.add('show');
+}
+
+// Apply saved theme on boot
+(function() {
+  const saved = localStorage.getItem('accord_theme') || '';
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+// Firebase config — baked in, no setup screen needed
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyAdkrDhM7k2x5MXipk-fxoDAu7sboZVUBs",
+    authDomain: "accord-59e1f.firebaseapp.com",
+    projectId: "accord-59e1f",
+    storageBucket: "accord-59e1f.firebasestorage.app",
+    messagingSenderId: "611659579256",
+    appId: "1:611659579256:web:06e0b6692a5fcce2b8128d",
+    measurementId: "G-6QQ7HPCHR9"
+  };
+
+const COLORS = [
+  '#60a5fa','#f472b6','#34d399','#fb923c','#a78bfa',
+  '#38bdf8','#4ade80','#fbbf24','#f87171','#c084fc',
+  '#2dd4bf','#e879f9','#86efac','#fdba74','#67e8f9','#fde68a'
+];
+
+const LANGUAGES = [
+  {code:'en',label:'English'},{code:'ar',label:'Arabic / العربية'},
+  {code:'zh',label:'Chinese / 中文'},{code:'nl',label:'Dutch / Nederlands'},
+  {code:'fr',label:'French / Français'},{code:'de',label:'German / Deutsch'},
+  {code:'hi',label:'Hindi / हिन्दी'},{code:'id',label:'Indonesian / Bahasa'},
+  {code:'it',label:'Italian / Italiano'},{code:'ja',label:'Japanese / 日本語'},
+  {code:'ko',label:'Korean / 한국어'},{code:'ms',label:'Malay / Melayu'},
+  {code:'pt',label:'Portuguese / Português'},{code:'ru',label:'Russian / Русский'},
+  {code:'es',label:'Spanish / Español'},{code:'sw',label:'Swahili / Kiswahili'},
+  {code:'ta',label:'Tamil / தமிழ்'},{code:'tr',label:'Turkish / Türkçe'},
+  {code:'ur',label:'Urdu / اردو'},{code:'vi',label:'Vietnamese / Tiếng Việt'},
+];
+
+const MODELS = [
+  // ===== FREE TIER — verified March 2026 =====
+  // openrouter/free is a magic router — picks best available free model automatically
+  // Individual :free IDs can disappear; this always works
+  {id:'openrouter/free',                              label:'Auto (best free model)',      group:'🆓 Free',      badge:'SMART'},
+  {id:'meta-llama/llama-3.3-70b-instruct:free',       label:'Llama 3.3 70B',               group:'🆓 Free',      badge:'GPT-4'},
+  {id:'deepseek/deepseek-r1:free',                    label:'DeepSeek R1',                 group:'🆓 Free',      badge:'REASON'},
+  {id:'openai/gpt-oss-120b:free',                     label:'GPT-OSS 120B (OpenAI)',        group:'🆓 Free',      badge:'NEW'},
+  {id:'minimax/minimax-m2.5:free',                    label:'MiniMax M2.5',                group:'🆓 Free',      badge:'NEW'},
+  {id:'nvidia/llama-3.3-nemotron-super-49b-v1:free',  label:'Nemotron Super 49B',          group:'🆓 Free',      badge:'262K'},
+  {id:'google/gemma-3-27b-it:free',                   label:'Gemma 3 27B',                 group:'🆓 Free',      badge:''},
+  {id:'google/gemma-3-12b-it:free',                   label:'Gemma 3 12B',                 group:'🆓 Free',      badge:''},
+  {id:'mistralai/mistral-small-3.1-24b-instruct:free',label:'Mistral Small 3.1 24B',       group:'🆓 Free',      badge:''},
+  {id:'z-ai/glm-4.5-air:free',                        label:'GLM-4.5-Air (Z.ai)',           group:'🆓 Free',      badge:'NEW'},
+  {id:'meta-llama/llama-3.2-3b-instruct:free',        label:'Llama 3.2 3B (fast)',         group:'🆓 Free',      badge:'FAST'},
+  // ===== FAST / CHEAP =====
+  {id:'anthropic/claude-haiku-4.5',                   label:'Claude Haiku 4.5',            group:'⚡ Fast',      badge:'NEW'},
+  {id:'openai/gpt-4o-mini',                           label:'GPT-4o Mini',                 group:'⚡ Fast',      badge:''},
+  {id:'google/gemini-2.5-flash',                      label:'Gemini 2.5 Flash',            group:'⚡ Fast',      badge:'NEW'},
+  {id:'google/gemini-flash-1.5',                      label:'Gemini 1.5 Flash',            group:'⚡ Fast',      badge:''},
+  // ===== SMART / BALANCED =====
+  {id:'anthropic/claude-sonnet-4.6',                  label:'Claude Sonnet 4.6 ✦',         group:'🧠 Smart',     badge:'LATEST'},
+  {id:'anthropic/claude-sonnet-4.5',                  label:'Claude Sonnet 4.5',           group:'🧠 Smart',     badge:''},
+  {id:'openai/gpt-4o',                                label:'GPT-4o',                      group:'🧠 Smart',     badge:''},
+  {id:'google/gemini-2.5-pro',                        label:'Gemini 2.5 Pro',              group:'🧠 Smart',     badge:'NEW'},
+  {id:'meta-llama/llama-3.3-70b-instruct',            label:'Llama 3.3 70B',               group:'🧠 Smart',     badge:''},
+  {id:'minimax/minimax-01',                           label:'MiniMax 01',                  group:'🧠 Smart',     badge:''},
+  {id:'mistralai/mistral-large-2411',                 label:'Mistral Large 2411',          group:'🧠 Smart',     badge:''},
+  // ===== REASONING =====
+  {id:'deepseek/deepseek-r1',                         label:'DeepSeek R1',                 group:'🔬 Reasoning', badge:''},
+  {id:'openai/o3-mini',                               label:'o3-mini',                     group:'🔬 Reasoning', badge:''},
+  {id:'openai/o4-mini',                               label:'o4-mini',                     group:'🔬 Reasoning', badge:'NEW'},
+  // ===== PREMIUM =====
+  {id:'anthropic/claude-opus-4.6',                    label:'Claude Opus 4.6 ✦',           group:'👑 Premium',   badge:'BEST'},
+  {id:'anthropic/claude-opus-4.5',                    label:'Claude Opus 4.5',             group:'👑 Premium',   badge:''},
+  {id:'x-ai/grok-3',                                  label:'Grok 3',                      group:'👑 Premium',   badge:'NEW'},
+  {id:'x-ai/grok-3-mini',                             label:'Grok 3 Mini',                 group:'👑 Premium',   badge:'FAST'},
+];
+
+const EMOJI_SET = [
+  '😀','😂','🥹','😊','😍','🥰','😘','😭','😤','😩','🤔','😮','😱','🙄','😴',
+  '🤗','🤝','👍','👎','❤️','🔥','✨','💯','🎉','🎊','🙏','💪','👏','🫶','💀',
+  '😂','🤣','😅','😆','😁','😄','🥲','😔','😟','😞','😣','😖','🥺','😢','😡',
+  '🤯','🤪','🤩','😎','🤓','🧐','🥸','😏','😒','🙃','😑','😐','🤐','🤫','🤭',
+  '👋','🤚','✋','🖐️','👌','🤌','🤏','🫰','✌️','🤞','🫳','🫴','👊','🤜','👈',
+  '💋','💔','❣️','💕','💞','💓','💗','💖','💘','💝','🫀','💌','💟','☮️','✝️',
+];
+
+const SYSTEM_PROMPT = `You are Accord, a wise and empathetic dialogue mediator with deep psychological insight. You help people with different perspectives find understanding, common ground, and productive forward movement.
+
+When analysing a conversation:
+1. **Acknowledge** — Reflect each person's core perspective so they feel genuinely heard
+2. **Illuminate** — Identify the underlying tension: what values, needs or fears are driving each side?
+3. **Bridge** — Find authentic common ground — shared goals or values both parties actually hold
+4. **Reframe** — Offer a perspective shift that makes the disagreement more navigable
+5. **Invite** — Close with a specific open question or next step that invites forward movement
+
+Your voice: warm, measured, psychologically informed, never preachy. Never take sides. Challenge unhelpful patterns gently. Use **bold** for key insights. Target 200–280 words. Begin directly — no preambles.
+
+For couples: acknowledge emotional undercurrents with extra care. Name feelings before facts.
+For language barriers: note when translation may be causing misunderstanding.`;
+
+// ============================================================
+// STATE
+// ============================================================
+const S = {
+  user: null,
+  rooms: [],
+  room: null,
+  db: null,
+  fbCfg: null,
+  pendingRoom: null,
+  pendingCfg: null,
+  pickedColor: COLORS[0],
+  myLang: 'en',
+  translateMode: 'original',
+  replyTo: null,
+  editMode: null,   // { msgId, originalContent } or null
+  msgsSinceAI: 0,
+  thinking: false,
+  subs: [],
+  emojiOpen: false,
+};
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', () => {
+  if (typeof firebase === 'undefined') {
+    document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:14px;font-family:sans-serif;color:#e2e8f8;background:#0b0e1a;padding:24px;text-align:center"><div style="font-size:36px">⚠️</div><div style="font-size:18px;font-weight:600">Firebase failed to load</div><div style="font-size:14px;color:#8a9ab8;max-width:300px;line-height:1.6">Check your internet connection and reload.</div><button onclick="location.reload()" style="margin-top:8px;padding:10px 24px;background:#f59e0b;color:#000;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">↺ Reload</button></div>`;
+    return;
+  }
+
+  fillColorPicker();
+  fillModelSelects();
+  fillLangSelects();
+  buildEmojiPicker();
+
+  const p = new URLSearchParams(location.search);
+  S.pendingRoom = p.get('room');
+  S.pendingCfg  = p.get('cfg');
+
+  if (S.pendingCfg) {
+    try {
+      const cfg = JSON.parse(atob(decodeURIComponent(S.pendingCfg)));
+      localStorage.setItem('accord_fb', JSON.stringify(cfg));
+      document.getElementById('join-banner').style.display = 'block';
+    } catch(e) {}
+    // Clean URL so refresh doesn't re-trigger join
+    history.replaceState({}, '', location.pathname);
+  }
+
+  // Firebase is baked in — connect automatically, no setup screen
+  S.fbCfg = FIREBASE_CONFIG;
+  localStorage.setItem('accord_fb', JSON.stringify(FIREBASE_CONFIG));
+
+  const savedUser = localStorage.getItem('accord_user');
+  if (savedUser) { try { S.user = JSON.parse(savedUser); } catch(e) {} }
+
+  const savedLang = localStorage.getItem('accord_lang') || 'en';
+  S.myLang = savedLang;
+  S.translateMode = localStorage.getItem('accord_trans_mode') || 'original';
+
+  document.getElementById('inp-lang').value = savedLang;
+  document.getElementById('tog-auto').addEventListener('change', function() {
+    document.getElementById('interval-field').style.display = this.checked ? 'block' : 'none';
+  });
+
+  // Migrate corrupt localStorage — strip any rooms where role isn't 'host'|'member'
+  try {
+    const raw = JSON.parse(localStorage.getItem('accord_rooms') || '[]');
+    const clean = raw.map(r => ({
+      id:   String(r.id   || '').substring(0,12),
+      name: String(r.name || 'Dialogue Room').replace(/[:\/\\]/g,'').substring(0,60) || 'Dialogue Room',
+      role: ['host','member'].includes(r.role) ? r.role : 'member',
+    })).filter(r => r.id && r.id.length >= 4);
+    localStorage.setItem('accord_rooms', JSON.stringify(clean));
+  } catch(e) {}
+
+  showScreen('screen-name');
+});
+
+// ============================================================
+// COLOR PICKER
+// ============================================================
+function fillColorPicker() {
+  const el = document.getElementById('color-picker');
+  COLORS.forEach((c, i) => {
+    const s = document.createElement('div');
+    s.className = 'swatch' + (i === 0 ? ' sel' : '');
+    s.style.background = c;
+    s.onclick = () => {
+      document.querySelectorAll('.swatch').forEach(x => x.classList.remove('sel'));
+      s.classList.add('sel');
+      S.pickedColor = c;
+    };
+    el.appendChild(s);
+  });
+}
+
+function pickUniqueColor(takenColors) {
+  for (const c of COLORS) {
+    if (!takenColors.includes(c)) return c;
+  }
+  // All taken — lighten a random one slightly
+  const base = COLORS[Math.floor(Math.random() * COLORS.length)];
+  return base;
+}
+
+// ============================================================
+// MODEL + LANG SELECTS
+// ============================================================
+function fillModelSelects() {
+  const groups = {};
+  MODELS.forEach(m => { if (!groups[m.group]) groups[m.group] = []; groups[m.group].push(m); });
+  ['inp-model','chat-model-sel','s-model'].forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return;
+    Object.entries(groups).forEach(([g, mods]) => {
+      const og = document.createElement('optgroup');
+      og.label = g;
+      mods.forEach(m => {
+        const o = document.createElement('option');
+        o.value = m.id;
+        o.textContent = m.label + (m.badge ? ` [${m.badge}]` : '');
+        og.appendChild(o);
+      });
+      sel.appendChild(og);
+    });
+  });
+  document.getElementById('inp-model').value = 'openrouter/free';
+}
+
+function fillLangSelects() {
+  ['inp-lang','s-lang'].forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return;
+    LANGUAGES.forEach(l => {
+      const o = document.createElement('option');
+      o.value = l.code; o.textContent = l.label;
+      sel.appendChild(o);
+    });
+  });
+}
+
+function modelLabel(id) {
+  const m = MODELS.find(x => x.id === id);
+  return m ? m.label : id.split('/').pop();
+}
+function cleanModelLabel(id) {
+  if (!id) return '';
+  // Show a short human label — strip provider prefix and :free suffix
+  const m = MODELS.find(x => x.id === id);
+  if (m) return m.label;
+  return id.split('/').pop().replace(/:free$/, '').replace(/-\d{8}$/, '');
+}
+
+// ============================================================
+// SCREEN
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goRooms() {
+  S.subs.forEach(u => u()); S.subs = [];
+  S.room = null; S.replyTo = null;
+  document.getElementById('msgs').innerHTML = '';
+  renderRoomsList();
+  showScreen('screen-rooms');
+}
+
+// ============================================================
+// NAME SCREEN
+// ============================================================
+async function submitName() {
+  const name = document.getElementById('inp-name').value.trim();
+  if (!name) { toast('Please enter your name', 'err'); return; }
+  const lang = document.getElementById('inp-lang').value;
+  S.myLang = lang;
+  localStorage.setItem('accord_lang', lang);
+
+  const uid = localStorage.getItem('accord_uid') || uid8(12);
+  localStorage.setItem('accord_uid', uid);
+
+  // If we have a pending room, use its presence to pick non-conflicting color
+  S.user = { id: uid, name, color: S.pickedColor, lang };
+  localStorage.setItem('accord_user', JSON.stringify(S.user));
+
+  // Always connect with the baked-in config
+  const ok = await connectFirebase(S.fbCfg || FIREBASE_CONFIG);
+  if (!ok) return;
+  if (S.pendingRoom) { await joinRoomDirect(S.pendingRoom); return; }
+  renderRoomsList();
+  showScreen('screen-rooms');
+}
+
+// ============================================================
+// FIREBASE
+// ============================================================
+async function submitFirebase() {
+  let raw = document.getElementById('inp-fb').value.trim();
+  const m = raw.match(/\{[\s\S]*\}/);
+  if (m) raw = m[0];
+  let cfg;
+  try { cfg = JSON.parse(raw); }
+  catch(e) {
+    try {
+      const j = raw.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)/g,'$1"$2"$3');
+      cfg = JSON.parse(j);
+    } catch(e2) { toast('Cannot parse config — paste the { ... } block', 'err', 5000); return; }
+  }
+  const ok = await connectFirebase(cfg);
+  if (!ok) return;
+  if (S.pendingRoom) { await joinRoomDirect(S.pendingRoom); return; }
+  renderRoomsList();
+  showScreen('screen-rooms');
+}
+
+async function connectFirebase(cfg) {
+  try {
+    if (typeof firebase === 'undefined') throw new Error('Firebase library not loaded');
+    try { for (const a of firebase.apps) await a.delete(); } catch(e) {}
+    firebase.initializeApp(cfg);
+    S.db    = firebase.firestore();
+    S.fbCfg = cfg;
+    localStorage.setItem('accord_fb', JSON.stringify(cfg));
+    return true;
+  } catch(e) {
+    toast('Firebase error: ' + e.message, 'err', 7000); return false;
+  }
+}
+
+// ============================================================
+// ROOMS
+// ============================================================
+function loadLocalRooms() {
+  try { return JSON.parse(localStorage.getItem('accord_rooms') || '[]'); } catch(e) { return []; }
+}
+
+function saveLocalRoom(r) {
+  // Only store safe, known fields — never store API keys or model IDs here
+  const safe = {
+    id:   String(r.id   || '').substring(0, 12),
+    name: String(r.name || 'Dialogue Room').substring(0, 60),
+    role: ['host','member'].includes(r.role) ? r.role : 'member',
+  };
+  const rooms = loadLocalRooms().filter(x => x.id !== safe.id);
+  rooms.unshift(safe);
+  localStorage.setItem('accord_rooms', JSON.stringify(rooms.slice(0,20)));
+}
+
+function renderRoomsList() {
+  // Sanitise legacy/corrupt localStorage entries
+  let rooms = loadLocalRooms().map(r => ({
+    id:   (r.id   || '').substring(0, 12),
+    name: (r.name || 'Dialogue Room').substring(0, 60),
+    role: ['host','member'].includes(r.role) ? r.role : 'member',
+  })).filter(r => r.id);
+
+  // Deduplicate by id (keep most recent = first)
+  const seen = new Set();
+  rooms = rooms.filter(r => seen.has(r.id) ? false : seen.add(r.id));
+
+  const body = document.getElementById('rooms-body');
+  if (!rooms.length) {
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">💬</div><div class="es-title">No rooms yet</div><div class="es-sub">Create a room and invite others,<br>or enter a room code below.</div></div>`;
+    return;
+  }
+  body.innerHTML = rooms.map(r => `
+    <div class="room-card" onclick="joinRoomDirect('${r.id}')">
+      <div class="room-card-icon">⚖️</div>
+      <div class="room-card-info">
+        <div class="room-card-name">${esc(r.name)}</div>
+        <div class="room-card-meta">Code: ${r.id}</div>
+      </div>
+      <div class="room-card-right">
+        <span class="room-card-badge ${r.role === 'host' ? 'badge-host' : 'badge-member'}">${r.role === 'host' ? '★ Host' : 'Member'}</span>
+        <button class="room-del-btn" onclick="event.stopPropagation();deleteLocalRoom('${r.id}')">✕ Remove</button>
+      </div>
+    </div>`).join('');
+}
+
+function deleteLocalRoom(id) {
+  const rooms = loadLocalRooms().filter(r => r.id !== id);
+  localStorage.setItem('accord_rooms', JSON.stringify(rooms));
+  renderRoomsList();
+  toast('Room removed from list', 'info');
+}
+
+async function doCreateRoom() {
+  const btn = document.querySelector('#screen-setup .btn-primary');
+  if (btn.dataset.loading) return;
+  btn.dataset.loading = '1';
+  btn.textContent = '⏳ Creating…';
+  btn.disabled = true;
+  const restore = () => { btn.textContent = '✦ Create Room'; btn.disabled = false; delete btn.dataset.loading; };
+  const orKey    = document.getElementById('inp-or-key').value.trim();
+  const model    = document.getElementById('inp-model').value;
+  const autoAI   = document.getElementById('tog-auto').checked;
+  const interval = parseInt(document.getElementById('inp-interval').value);
+  const open     = document.getElementById('tog-open').checked;
+  const roomName = document.getElementById('inp-roomname').value.trim() || 'Dialogue Room';
+
+  if (!orKey) { restore(); toast('Please enter your OpenRouter API key', 'err'); return; }
+
+  const roomId = uid8(6);
+  S.room = { id: roomId, name: roomName, orKey, orModel: model, autoAI, autoInterval: interval, open };
+
+  try {
+    await S.db.collection('rooms').doc(roomId).set({
+      name: roomName, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      creatorId: S.user.id, orKey, orModel: model, autoAI, autoInterval: interval, open,
+      msgCount: 0, summary: '',
+    });
+    await S.db.collection('rooms').doc(roomId).collection('presence').doc(S.user.id).set({
+      name: S.user.name, color: S.user.color, lang: S.myLang,
+      role: 'host', lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    saveLocalRoom({ id: roomId, name: roomName, role: 'host' });
+    restore();
+    enterChat();
+  } catch(e) { restore(); toast('Error creating room: ' + e.message, 'err'); }
+}
+
+async function doJoinByCode() {
+  const code = document.getElementById('inp-join').value.trim().toUpperCase();
+  if (!code) { toast('Enter a room code', 'err'); return; }
+  await joinRoomDirect(code);
+}
+
+async function joinRoomDirect(roomId) {
+  try {
+    const doc = await S.db.collection('rooms').doc(roomId).get();
+    if (!doc.exists) { toast('Room not found. Check the code.', 'err'); showScreen('screen-rooms'); return; }
+
+    const d = doc.data();
+    S.room = { id: roomId, ...d };
+
+    // Resolve color conflict
+    const presSnap = await S.db.collection('rooms').doc(roomId).collection('presence').get();
+    const takenColors = presSnap.docs.map(x => x.data().color).filter(Boolean);
+    if (takenColors.includes(S.user.color)) {
+      S.user.color = pickUniqueColor(takenColors);
+      localStorage.setItem('accord_user', JSON.stringify(S.user));
+    }
+
+    await S.db.collection('rooms').doc(roomId).collection('presence').doc(S.user.id).set({
+      name: S.user.name, color: S.user.color, lang: S.myLang,
+      role: d.creatorId === S.user.id ? 'host' : 'member',
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const role = d.creatorId === S.user.id ? 'host' : 'member';
+    saveLocalRoom({ id: roomId, name: d.name || roomId, role });
+    enterChat();
+  } catch(e) { toast('Error joining: ' + e.message, 'err'); showScreen('screen-rooms'); }
+}
+
+// ============================================================
+// ENTER CHAT
+// ============================================================
+function enterChat() {
+  showScreen('screen-chat');
+  document.getElementById('room-name-pill').textContent = S.room.name || S.room.id;
+  document.getElementById('chat-model-sel').value  = S.room.orModel || MODELS[0].id;
+  document.getElementById('chat-auto-tog').checked = S.room.autoAI;
+  document.getElementById('auto-lbl').textContent  = S.room.autoAI ? 'Auto: On' : 'Auto';
+  updateTransModeUI();
+  listenMessages();
+  listenPresence();
+  listenRoom();
+  setTimeout(() => document.getElementById('msg-input').focus(), 400);
+}
+
+// ============================================================
+// LISTENERS
+// ============================================================
+function listenMessages() {
+  const unsub = S.db.collection('rooms').doc(S.room.id)
+    .collection('messages').orderBy('timestamp','asc')
+    .onSnapshot(snap => {
+      snap.docChanges().forEach(ch => {
+        const msg = { id: ch.doc.id, ...ch.doc.data() };
+
+        if (ch.type === 'added') {
+          renderMsg(msg);
+          scrollBottom();
+          if (!msg.isAI && msg.userId !== S.user.id) {
+            S.msgsSinceAI++;
+          }
+
+        } else if (ch.type === 'modified') {
+          // In-place update: AI placeholder filled in, or message edited
+          const el = document.getElementById('msg-' + msg.id);
+          if (el) {
+            const fresh = buildMsgElement(msg);
+            el.replaceWith(fresh);
+            if (msg.isAI && !msg.pending) scrollBottom();
+          }
+        }
+      });
+    });
+  S.subs.push(unsub);
+}
+
+function listenPresence() {
+  const unsub = S.db.collection('rooms').doc(S.room.id)
+    .collection('presence').onSnapshot(snap => {
+      const members = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderPresenceCount(members.length);
+      renderParticipantsPanel(members);
+    });
+  S.subs.push(unsub);
+}
+
+// ── Room document listener — syncs model/settings changes to ALL clients ──
+function listenRoom() {
+  const unsub = S.db.collection('rooms').doc(S.room.id)
+    .onSnapshot(snap => {
+      if (!snap.exists) return;
+      const d = snap.data();
+
+      // Sync model if it changed
+      if (d.orModel && d.orModel !== S.room.orModel) {
+        S.room.orModel = d.orModel;
+        const sel = document.getElementById('chat-model-sel');
+        if (sel && sel.value !== d.orModel) {
+          sel.value = d.orModel;
+          // Only show toast if we didn't trigger the change ourselves
+          if (d.updatedBy && d.updatedBy !== S.user.id) {
+            const label = cleanModelLabel(d.orModel);
+            toast(`Model changed to ${label}`, 'info');
+          }
+        }
+      }
+
+      // Sync auto-mediator toggle
+      if (typeof d.autoAI !== 'undefined' && d.autoAI !== S.room.autoAI) {
+        S.room.autoAI = d.autoAI;
+        const tog = document.getElementById('chat-auto-tog');
+        if (tog) tog.checked = d.autoAI;
+        document.getElementById('auto-lbl').textContent = d.autoAI ? 'Auto: On' : 'Auto';
+      }
+
+      // Sync auto interval
+      if (d.autoInterval && d.autoInterval !== S.room.autoInterval) {
+        S.room.autoInterval = d.autoInterval;
+      }
+
+      // Sync API key (in case host rotates it)
+      if (d.orKey) S.room.orKey = d.orKey;
+    });
+  S.subs.push(unsub);
+}
+
+function renderPresenceCount(n) {
+  document.getElementById('part-count').textContent = n;
+}
+
+function renderParticipantsPanel(members) {
+  const body = document.getElementById('panel-body');
+  const myRole = members.find(m => m.id === S.user.id)?.role || 'member';
+  body.innerHTML = members.map(m => {
+    const isMe = m.id === S.user.id;
+    const initials = (m.name || '?')[0].toUpperCase();
+    const hostBtns = myRole === 'host' && !isMe ? `
+      <div class="member-actions">
+        ${m.role === 'member' ? `<button class="ma-btn" onclick="promoteToHost('${m.id}')">Make host</button>` : ''}
+        <button class="ma-btn danger" onclick="kickMember('${m.id}','${esc(m.name)}')">Kick</button>
+      </div>` : '';
+    return `<div class="member-row">
+      <div class="member-av" style="background:${m.color||'#60a5fa'};color:${contrastColor(m.color||'#60a5fa')}">${initials}</div>
+      <div class="member-info">
+        <div class="member-name">${esc(m.name)}${isMe ? ' <span style="font-size:10px;color:var(--muted)">(you)</span>' : ''}</div>
+        <div class="member-status">${LANGUAGES.find(l=>l.code===m.lang)?.label?.split(' / ')[0] || 'English'}</div>
+      </div>
+      <span class="member-role ${m.role==='host'?'role-host':'role-member'}">${m.role?.toUpperCase()||'MEMBER'}</span>
+      ${hostBtns}
+    </div>`;
+  }).join('');
+}
+
+async function promoteToHost(uid) {
+  await S.db.collection('rooms').doc(S.room.id).collection('presence').doc(uid).update({ role: 'host' });
+  toast('Promoted to host ✓', 'ok');
+}
+
+async function kickMember(uid, name) {
+  if (!confirm(`Remove ${name} from the room?`)) return;
+  await S.db.collection('rooms').doc(S.room.id).collection('presence').doc(uid).delete();
+  toast(`${name} removed`, 'info');
+}
+
+function toggleParticipants() {
+  const panel   = document.getElementById('participants-panel');
+  const overlay = document.getElementById('panel-overlay');
+  const open    = panel.classList.toggle('open');
+  overlay.style.display = open ? 'block' : 'none';
+}
+
+// ============================================================
+// RENDER MESSAGES
+// ============================================================
+function renderMsg(msg) {
+  const wrap = document.getElementById('msgs');
+  const el   = buildMsgElement(msg);
+  wrap.appendChild(el);
+}
+
+function buildMsgElement(msg) {
+  const el = document.createElement('div');
+  el.id = 'msg-' + msg.id;
+
+  if (msg.type === 'system') {
+    el.className = 'msg-sys';
+    el.textContent = msg.content;
+    return el;
+  }
+
+  if (msg.isAI) {
+    if (msg.pending) {
+      // Placeholder — show thinking animation in the right place
+      el.className = 'thinking';
+      el.innerHTML = `<div class="ai-av" style="width:28px;height:28px;font-size:13px">⚖️</div>
+        <span>Accord is thinking</span>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+    } else {
+      el.className = 'msg-ai';
+      el.innerHTML = `
+        <div class="ai-hdr">
+          <div class="ai-av">⚖️</div>
+          <span class="ai-name">Accord</span>
+          <span class="ai-model-tag">${cleanModelLabel(msg.aiModel||'')}</span>
+        </div>
+        <div class="ai-body">${mdToHtml(msg.content)}</div>`;
+    }
+    return el;
+  }
+
+  const own = msg.userId === S.user?.id;
+  el.className = 'msg-u ' + (own ? 'own' : 'other');
+  el.dataset.msgId = msg.id;
+
+  const ts  = msg.timestamp ? fmtTime(msg.timestamp.toDate ? msg.timestamp.toDate() : new Date()) : '';
+  const col = msg.userColor || '#60a5fa';
+  const txt = own ? contrastColor(col) : 'inherit';
+  const bg  = own ? `background:${col};color:${txt};` : '';
+
+  const replyHtml = msg.replyTo ? `
+    <div class="quote-bar">
+      <div class="quote-name">${esc(msg.replyTo.userName)}</div>
+      <div class="quote-text">${esc(msg.replyTo.preview)}</div>
+    </div>` : '';
+
+  let translationHtml = '';
+  if (S.translateMode !== 'original' && msg.translations && msg.translations[S.myLang]) {
+    const trans = msg.translations[S.myLang];
+    if (S.translateMode === 'both') {
+      translationHtml = `<div class="trans-line">🌐 ${esc(trans)}</div>`;
+    } else if (S.translateMode === 'translated') {
+      // Replace content display with translation below
+      translationHtml = `<div class="trans-line">${esc(trans)}</div>`;
+    }
+  }
+
+  const editedTag = msg.edited ? ' <span style="font-size:10px;opacity:.55">(edited)</span>' : '';
+  const contentHtml = ((S.translateMode === 'translated' && msg.translations?.[S.myLang])
+    ? esc(msg.translations[S.myLang])
+    : esc(msg.content)) + editedTag;
+
+  const metaHtml = own
+    ? `<div class="msg-meta" style="justify-content:flex-end"><span class="time">${ts}</span><span class="name" style="color:${col}">You</span></div>`
+    : `<div class="msg-meta"><span class="name" style="color:${col}">${esc(msg.userName)}</span><span class="time">${ts}</span></div>`;
+
+  const actionsHtml = `<div class="msg-actions">
+    <button class="msg-action-btn" onclick="startReply('${msg.id}','${esc(msg.userName)}','${esc((msg.content||'').substring(0,60))}')">↩</button>
+    ${own ? `<button class="msg-action-btn" onclick="startEdit('${msg.id}','${esc(msg.content)}')" title="Edit">✏️</button>` : ''}
+    <button class="msg-action-btn" onclick="navigator.clipboard.writeText('${esc(msg.content)}').then(()=>toast('Copied','ok'))">📋</button>
+    ${(S.translateMode !== 'original') ? `<button class="msg-action-btn" onclick="translateMsg('${msg.id}','${esc(msg.content)}')">🌐</button>` : ''}
+  </div>`;
+
+  el.innerHTML = metaHtml + `<div class="bubble" style="${bg}">
+    ${actionsHtml}${replyHtml}${contentHtml}${translationHtml}
+  </div>`;
+
+  // Auto-translate if needed
+  if (S.translateMode !== 'original' && msg.userLang && msg.userLang !== S.myLang && !msg.translations?.[S.myLang]) {
+    translateMsg(msg.id, msg.content);
+  }
+}
+
+function showThinking() {
+  removeThinking();
+  const wrap = document.getElementById('msgs');
+  const el   = document.createElement('div');
+  el.id = 'thinking-el'; el.className = 'thinking';
+  el.innerHTML = `<div class="ai-av" style="width:28px;height:28px;font-size:13px">⚖️</div>
+    <span>Accord is thinking</span>
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  wrap.appendChild(el); scrollBottom();
+}
+function removeThinking() { const e = document.getElementById('thinking-el'); if(e) e.remove(); }
+
+// ============================================================
+// SEND MESSAGE
+// ============================================================
+async function sendMessage() {
+  if (S.editMode) { await saveEdit(); return; }  // route to edit save
+  const inp     = document.getElementById('msg-input');
+  const content = inp.value.trim();
+  if (!content || !S.room) return;
+  inp.value = ''; autoGrow(inp);
+
+  const msgData = {
+    userId: S.user.id, userName: S.user.name, userColor: S.user.color,
+    userLang: S.myLang, content,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    isAI: false,
+  };
+  if (S.replyTo) { msgData.replyTo = S.replyTo; cancelReply(); }
+
+  try {
+    await S.db.collection('rooms').doc(S.room.id).collection('messages').add(msgData);
+    const roomRef = S.db.collection('rooms').doc(S.room.id);
+    await roomRef.update({ msgCount: firebase.firestore.FieldValue.increment(1) });
+
+    // Update summary every 20 messages
+    const snap = await roomRef.get();
+    if ((snap.data().msgCount || 0) % 20 === 0) updateSummary();
+
+    S.msgsSinceAI++;
+    // Auto-trigger AI — only the sender triggers, not every listener
+    if (S.room.autoAI && S.msgsSinceAI >= (S.room.autoInterval || 5)) {
+      S.msgsSinceAI = 0;
+      setTimeout(() => invokeAI(), 900);
+    }
+  } catch(e) { toast('Send failed: ' + e.message, 'err'); }
+}
+
+function onInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 110) + 'px'; }
+
+// ============================================================
+// REPLY / QUOTE
+// ============================================================
+function startReply(msgId, userName, preview) {
+  S.replyTo = { id: msgId, userName, preview };
+  document.getElementById('rp-name').textContent = userName;
+  document.getElementById('rp-text').textContent = preview;
+  document.getElementById('reply-bar').classList.add('visible');
+  document.getElementById('msg-input').focus();
+}
+function cancelReply() {
+  S.replyTo = null;
+  document.getElementById('reply-bar').classList.remove('visible');
+}
+
+// ── Message editing ──────────────────────────────────────────
+function startEdit(msgId, content) {
+  S.editMode = { msgId, originalContent: content };
+  const inp = document.getElementById('msg-input');
+  inp.value = content;
+  autoGrow(inp);
+  inp.focus();
+  inp.setSelectionRange(inp.value.length, inp.value.length);
+  // Show the reply bar repurposed as edit bar
+  document.getElementById('rp-name').textContent = 'Editing message';
+  document.getElementById('rp-text').textContent = content.substring(0, 60);
+  document.getElementById('reply-bar').classList.add('visible');
+  document.getElementById('reply-bar').style.background = 'var(--info-bg)';
+  document.getElementById('reply-bar').style.borderColor = 'var(--info)';
+}
+
+function cancelEdit() {
+  S.editMode = null;
+  document.getElementById('reply-bar').classList.remove('visible');
+  document.getElementById('reply-bar').style.background = '';
+  document.getElementById('reply-bar').style.borderColor = '';
+  document.getElementById('msg-input').value = '';
+  autoGrow(document.getElementById('msg-input'));
+}
+
+async function saveEdit() {
+  const inp = document.getElementById('msg-input');
+  const newContent = inp.value.trim();
+  if (!newContent || !S.editMode) return;
+  try {
+    await S.db.collection('rooms').doc(S.room.id)
+      .collection('messages').doc(S.editMode.msgId)
+      .update({ content: newContent, edited: true, editedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    cancelEdit();
+    toast('Message updated ✓', 'ok');
+  } catch(e) { toast('Edit failed: ' + e.message, 'err'); }
+}
+
+// ============================================================
+// EMOJI PICKER
+// ============================================================
+function buildEmojiPicker() {
+  const picker = document.getElementById('emoji-picker');
+  const grid   = document.createElement('div');
+  grid.className = 'emoji-grid';
+  EMOJI_SET.forEach(e => {
+    const btn = document.createElement('span');
+    btn.className = 'emoji-item'; btn.textContent = e;
+    btn.onclick = () => { insertEmoji(e); };
+    grid.appendChild(btn);
+  });
+  picker.appendChild(grid);
+}
+
+function toggleEmojiPicker() {
+  const picker = document.getElementById('emoji-picker');
+  S.emojiOpen  = !S.emojiOpen;
+  picker.classList.toggle('open', S.emojiOpen);
+}
+
+function insertEmoji(e) {
+  const inp = document.getElementById('msg-input');
+  const pos = inp.selectionStart;
+  inp.value = inp.value.slice(0, pos) + e + inp.value.slice(pos);
+  inp.selectionStart = inp.selectionEnd = pos + e.length;
+  inp.focus(); autoGrow(inp);
+}
+
+document.addEventListener('click', e => {
+  const picker = document.getElementById('emoji-picker');
+  if (!picker) return;
+  if (!picker.contains(e.target) && !e.target.closest('.emoji-btn')) {
+    S.emojiOpen = false; picker.classList.remove('open');
+  }
+});
+
+// ============================================================
+// AI INTEGRATION — TOKEN EFFICIENT
+// ============================================================
+async function invokeAI(customPrompt = null) {
+  if (S.thinking) return;
+  const key = S.room?.orKey;
+  if (!key) { toast('No API key — open Settings ⚙️', 'err'); return; }
+
+  // ── Distributed lock: only one client posts AI at a time ──
+  // Attempt to atomically claim the aiLock in Firestore
+  const roomRef = S.db.collection('rooms').doc(S.room.id);
+  try {
+    let locked = false;
+    await S.db.runTransaction(async txn => {
+      const doc = await txn.get(roomRef);
+      const d   = doc.data() || {};
+      const age = d.aiLockAt ? (Date.now() - d.aiLockAt.toMillis()) : 99999;
+      // If a lock exists and is less than 45s old, another client is running — bail
+      if (d.aiLock && age < 45000) { locked = false; return; }
+      txn.update(roomRef, {
+        aiLock:   true,
+        aiLockAt: firebase.firestore.FieldValue.serverTimestamp(),
+        aiLockBy: S.user.id,
+      });
+      locked = true;
+    });
+    if (!locked) { return; }   // another client has it — skip silently
+  } catch(e) {
+    // Transaction failed (e.g. offline) — proceed anyway on manual clicks
+    if (!customPrompt && S.thinking) return;
+  }
+
+  S.thinking = true;
+  const btn = document.getElementById('ask-btn');
+  btn.disabled = true; btn.textContent = '⏳…';
+
+  // Create placeholder in Firestore — it appears in the right position immediately
+  let placeholderRef = null;
+  try {
+    placeholderRef = await S.db.collection('rooms').doc(S.room.id).collection('messages').add({
+      isAI: true, pending: true, content: '',
+      userId: 'AI', userName: 'Accord', userColor: '#b07d2e',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch(e) { /* fallback: no placeholder */ }
+
+  try {
+    // Build efficient context: summary + last 15 messages only
+    const roomSnap = await S.db.collection('rooms').doc(S.room.id).get();
+    const summary  = roomSnap.data().summary || '';
+    const msgsSnap = await S.db.collection('rooms').doc(S.room.id)
+      .collection('messages').orderBy('timestamp','desc').limit(15).get();
+
+    const recent = msgsSnap.docs.reverse().map(d => d.data());
+    const convoText = recent
+      .map(m => m.isAI ? `[Accord]: ${m.content}` : `${m.userName}: ${m.content}`)
+      .join('\n\n');
+
+    const contextMsg = summary
+      ? `[Conversation so far — summary]: ${summary}\n\n[Recent messages]:\n\n${convoText}`
+      : `[Conversation]:\n\n${convoText}`;
+
+    const model = document.getElementById('chat-model-sel').value || MODELS[0].id;
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': location.href,
+        'X-Title': 'Accord - Mediated Dialogue',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 600,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user',   content: customPrompt || `${contextMsg}\n\nPlease analyse and mediate this conversation.` },
+        ],
+      }),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errBody.substring(0, 200)}`);
+    }
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+
+    const text = data.choices?.[0]?.message?.content;
+    if (!text) throw new Error('Empty response — check model name or API credits');
+
+    removeThinking();
+    await S.db.collection('rooms').doc(S.room.id).collection('messages').add({
+      userId: 'AI', userName: 'Accord', userColor: '#f59e0b', content: text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      isAI: true, aiModel: data.model || model,
+    });
+    S.msgsSinceAI = 0;
+
+  } catch(e) {
+    // Remove failed placeholder
+    if (placeholderRef) {
+      try { await placeholderRef.delete(); } catch(ex) {}
+    }
+    toast('AI error: ' + e.message, 'err', 8000);
+  } finally {
+    S.thinking = false; btn.disabled = false; btn.textContent = '⚖️ Ask';
+    // Release the distributed lock
+    try { await roomRef.update({ aiLock: false, aiLockAt: null }); } catch(e) {}
+  }
+}
+
+// ============================================================
+// CONVERSATION SUMMARY (memory / token efficiency)
+// ============================================================
+let _summaryLock = false;   // global flag — only one summary at a time
+
+async function updateSummary() {
+  if (_summaryLock) return; // already running — skip this trigger
+  const key = S.room?.orKey;
+  if (!key) return;
+  _summaryLock = true;
+  const pill = document.getElementById('summary-pill');
+  if (pill) pill.classList.add('visible');
+  try {
+    const snap = await S.db.collection('rooms').doc(S.room.id)
+      .collection('messages').orderBy('timestamp','asc').limit(60).get();
+    const msgs = snap.docs.map(d => d.data());
+    const convo = msgs.map(m => m.isAI ? `[Accord]: ${m.content}` : `${m.userName}: ${m.content}`).join('\n\n');
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.href },
+      body: JSON.stringify({
+        model: 'openrouter/free', // Always use cheapest available free model for summaries
+        max_tokens: 250,
+        messages: [{ role: 'user', content: `Summarise this conversation in 3–4 sentences, capturing the main topic, each person's core position, and any progress made. Be factual and brief.\n\n${convo}` }],
+      }),
+    });
+    const data = await res.json();
+    const summary = data.choices?.[0]?.message?.content;
+    if (summary) {
+      await S.db.collection('rooms').doc(S.room.id).update({ summary });
+    }
+  } catch(e) { /* summary failure is silent */ }
+  finally {
+    _summaryLock = false;
+    const p = document.getElementById('summary-pill');
+    if (p) p.classList.remove('visible');
+  }
+}
+
+// ============================================================
+// TRANSLATION
+// ============================================================
+async function translateMsg(msgId, content) {
+  const key = S.room?.orKey;
+  if (!key || !content) return;
+  try {
+    const targetLang = LANGUAGES.find(l => l.code === S.myLang)?.label?.split(' / ')[0] || 'English';
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.href },
+      body: JSON.stringify({
+        model: 'openrouter/free',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: `Translate the following message to ${targetLang}. Return ONLY the translated text, nothing else.\n\n"${content}"` }],
+      }),
+    });
+    const data = await res.json();
+    const translated = data.choices?.[0]?.message?.content?.trim()?.replace(/^["']|["']$/g,'');
+    if (translated) {
+      // Store in Firestore to cache
+      await S.db.collection('rooms').doc(S.room.id).collection('messages').doc(msgId)
+        .update({ [`translations.${S.myLang}`]: translated });
+    }
+  } catch(e) { /* silent */ }
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function showSettingsModal() {
+  document.getElementById('s-or-key').value   = S.room?.orKey || '';
+  document.getElementById('s-model').value    = S.room?.orModel || MODELS[0].id;
+  document.getElementById('s-auto').checked   = S.room?.autoAI || false;
+  document.getElementById('s-interval').value = S.room?.autoInterval || 5;
+  document.getElementById('s-lang').value     = S.myLang;
+  updateTransModeUI();
+  document.getElementById('overlay-settings').classList.add('show');
+}
+
+async function saveSettings() {
+  const orKey    = document.getElementById('s-or-key').value.trim() || S.room?.orKey;
+  const model    = document.getElementById('s-model').value;
+  const autoAI   = document.getElementById('s-auto').checked;
+  const interval = parseInt(document.getElementById('s-interval').value);
+  const lang     = document.getElementById('s-lang').value;
+
+  S.myLang = lang;
+  localStorage.setItem('accord_lang', lang);
+  localStorage.setItem('accord_trans_mode', S.translateMode);
+  await S.db.collection('rooms').doc(S.room.id).collection('presence').doc(S.user.id).update({ lang });
+
+  try {
+    await S.db.collection('rooms').doc(S.room.id).update({ orKey, orModel: model, autoAI, autoInterval: interval, updatedBy: S.user.id });
+    Object.assign(S.room, { orKey, orModel: model, autoAI, autoInterval: interval });
+    document.getElementById('chat-model-sel').value  = model;
+    document.getElementById('chat-auto-tog').checked = autoAI;
+    document.getElementById('auto-lbl').textContent  = autoAI ? 'Auto: On' : 'Auto';
+    toast('Settings saved ✓', 'ok');
+    closeOverlayById('overlay-settings');
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+function onModelChange(val) {
+  if (!S.room) return;
+  S.room.orModel = val;
+  S.db.collection('rooms').doc(S.room.id).update({
+    orModel: val,
+    updatedBy: S.user.id,   // lets other clients know who changed it
+  }).catch(() => {});
+}
+function onAutoToggle(checked) {
+  if (!S.room) return;
+  S.room.autoAI = checked;
+  document.getElementById('auto-lbl').textContent = checked ? 'Auto: On' : 'Auto';
+  S.db.collection('rooms').doc(S.room.id).update({
+    autoAI: checked,
+    updatedBy: S.user.id,
+  }).catch(() => {});
+}
+
+function setTransMode(mode) {
+  S.translateMode = mode;
+  localStorage.setItem('accord_trans_mode', mode);
+  updateTransModeUI();
+}
+
+function updateTransModeUI() {
+  ['original','both','translated'].forEach(m => {
+    const btn = document.getElementById('tm-' + m);
+    if (btn) btn.classList.toggle('sel', S.translateMode === m);
+  });
+}
+
+// ============================================================
+// SHARE
+// ============================================================
+function buildLink(roomId) {
+  const base = location.href.split('?')[0];
+  const cfg  = encodeURIComponent(btoa(JSON.stringify(S.fbCfg)));
+  return `${base}?room=${roomId}&cfg=${cfg}`;
+}
+
+function showShareModal() {
+  const link = buildLink(S.room.id);
+  document.getElementById('share-link-txt').textContent = link;
+  document.getElementById('share-code').textContent     = S.room.id;
+  document.getElementById('overlay-share').classList.add('show');
+}
+
+function copyLink() {
+  const url = document.getElementById('share-link-txt').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    toast('Link copied! 📋 Share it on WhatsApp', 'ok');
+    closeOverlayById('overlay-share');
+  }).catch(() => {
+    const t = document.createElement('textarea');
+    t.value = url; document.body.appendChild(t); t.select();
+    document.execCommand('copy'); t.remove();
+    toast('Link copied!', 'ok');
+    closeOverlayById('overlay-share');
+  });
+}
+
+function whatsappShare() {
+  const url  = document.getElementById('share-link-txt').textContent;
+  const room = S.room?.name || 'a dialogue room';
+  const text = `Join me on Accord for "${room}"`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n\n' + url)}`, '_blank');
+}
+
+async function nativeShare() {
+  const url  = document.getElementById('share-link-txt').textContent;
+  const room = S.room?.name || 'a dialogue room';
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Accord — ${room}`,
+        text: `Join me in "${room}" on Accord, an AI-mediated dialogue app.`,
+        url: url,
+      });
+    } catch(e) {
+      if (e.name !== 'AbortError') copyLink();
+    }
+  } else {
+    copyLink();
+    toast('Link copied — paste it anywhere to share!', 'info', 4000);
+  }
+}
+
+// ============================================================
+// OVERLAYS
+// ============================================================
+function closeOverlay(id, e) { if (e.target === document.getElementById(id)) closeOverlayById(id); }
+function closeOverlayById(id) { document.getElementById(id).classList.remove('show'); }
+
+// ============================================================
+// UTILS
+// ============================================================
+function uid8(n=12) {
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length:n},()=>c[Math.floor(Math.random()*c.length)]).join('');
+}
+function esc(s='') {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function mdToHtml(text) {
+  let h = esc(text);
+  h = h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h = h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  h = h.replace(/\n\n+/g,'</p><p>');
+  h = h.replace(/\n/g,'<br>');
+  return `<p>${h}</p>`;
+}
+function fmtTime(d) { if(!d) return ''; return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function contrastColor(hex) {
+  if (!hex||hex[0]!=='#') return '#fff';
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return (0.299*r+0.587*g+0.114*b)/255>0.55?'#111':'#fff';
+}
+function scrollBottom() { const el=document.getElementById('msgs'); if(el) requestAnimationFrame(()=>{el.scrollTop=el.scrollHeight;}); }
+function toast(msg,type='info',duration=3200) {
+  const el=document.getElementById('notif');
+  el.textContent=msg; el.className=`notif show ${type}`;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),duration);
+}
+</script>
+
+<style id="themes-css">
+/* ════════════════════════════════════════════════════
+   7 THEMES  —  override :root via [data-theme]
+   ════════════════════════════════════════════════════ */
+
+/* ── 1. PAPER (default warm parchment — see :root) ── */
+
+/* ── 2. MIDNIGHT INK — focused, professional night ── */
+[data-theme="midnight"] {
+  --bg:#0c0f1a; --surface:#111827; --surface2:#1a2235;
+  --surface3:#1e2a40; --surface4:#243048;
+  --border:rgba(255,255,255,.07); --border2:rgba(255,255,255,.11); --border3:rgba(255,255,255,.16);
+  --text:#e8eeff; --text2:#7a8aaa; --text3:#3a4a6a;
+  --amber:#818cf8; --amber2:#6366f1; --amber-light:rgba(99,102,241,.12);
+  --amber-mid:rgba(99,102,241,.25); --amber-dim:rgba(99,102,241,.08);
+  --amber-glow:rgba(99,102,241,.20);
+  --success:#34d399; --success-bg:rgba(52,211,153,.08);
+  --danger:#f87171;  --danger-bg:rgba(248,113,113,.08);
+  --info:#60a5fa;    --info-bg:rgba(96,165,250,.08);
+  --sh-xs:0 1px 4px rgba(0,0,0,.4); --sh-sm:0 2px 12px rgba(0,0,0,.5);
+  --sh:0 4px 24px rgba(0,0,0,.55); --sh-lg:0 12px 48px rgba(0,0,0,.7);
+}
+[data-theme="midnight"] body { background:var(--bg) }
+[data-theme="midnight"] .setup-wrap {
+  background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(99,102,241,.1) 0%,transparent 70%),var(--bg);
+}
+[data-theme="midnight"] .msgs { background:var(--bg) }
+[data-theme="midnight"] .other .bubble { background:var(--surface2); border-color:var(--border2) }
+
+/* ── 3. NEON TOKYO — cyberpunk Gen Z ── */
+[data-theme="neon"] {
+  --bg:#080010; --surface:#100018; --surface2:#180024;
+  --surface3:#1e002e; --surface4:#240038;
+  --border:rgba(255,0,200,.12); --border2:rgba(255,0,200,.2); --border3:rgba(255,0,200,.3);
+  --text:#f0e6ff; --text2:#b07acc; --text3:#5a3a6a;
+  --amber:#ff2dff; --amber2:#cc00cc; --amber-light:rgba(255,45,255,.08);
+  --amber-mid:rgba(255,45,255,.22); --amber-dim:rgba(255,45,255,.06);
+  --amber-glow:rgba(255,45,255,.18);
+  --success:#00f5b4; --success-bg:rgba(0,245,180,.08);
+  --danger:#ff4466;  --danger-bg:rgba(255,68,102,.08);
+  --info:#00ccff;    --info-bg:rgba(0,204,255,.08);
+  --sh-xs:0 0 8px rgba(255,45,255,.15); --sh-sm:0 0 16px rgba(255,45,255,.2);
+  --sh:0 0 30px rgba(255,45,255,.22); --sh-lg:0 0 50px rgba(255,45,255,.28);
+}
+[data-theme="neon"] body { background:var(--bg) }
+[data-theme="neon"] .setup-wrap {
+  background:radial-gradient(ellipse 80% 60% at 30% 50%,rgba(0,204,255,.07) 0%,transparent 50%),
+             radial-gradient(ellipse 60% 60% at 70% 50%,rgba(255,45,255,.09) 0%,transparent 50%),
+             var(--bg);
+}
+[data-theme="neon"] .msgs { background:var(--bg) }
+[data-theme="neon"] .card,
+[data-theme="neon"] .modal { border-color:rgba(255,45,255,.25) }
+[data-theme="neon"] .logo-mark { background:linear-gradient(135deg,#ff00cc,#7700cc) }
+[data-theme="neon"] .other .bubble { background:var(--surface2); border-color:var(--border2) }
+[data-theme="neon"] .btn-primary { background:linear-gradient(135deg,#ff00cc,#7700cc) }
+[data-theme="neon"] .send-btn { background:linear-gradient(135deg,#ff00cc,#7700cc) }
+[data-theme="neon"] .msg-ai { border-color:rgba(255,45,255,.25) }
+[data-theme="neon"] .msg-ai::before { background:linear-gradient(90deg,transparent,rgba(255,45,255,.5),transparent) }
+[data-theme="neon"] .ai-bar { background:rgba(255,45,255,.05); border-bottom-color:rgba(255,45,255,.2) }
+
+/* ── 4. SAKURA — soft Japanese romantic ── */
+[data-theme="sakura"] {
+  --bg:#fff5f7; --surface:#ffffff; --surface2:#fff0f3;
+  --surface3:#ffe4ea; --surface4:#ffd6de;
+  --border:#f5c0cb; --border2:#eaa0b0; --border3:#d4788a;
+  --text:#2d1520; --text2:#8a4558; --text3:#c0889a;
+  --amber:#c4325a; --amber2:#a01a40; --amber-light:#fff0f3;
+  --amber-mid:#ffd6de; --amber-dim:rgba(196,50,90,.08);
+  --amber-glow:rgba(196,50,90,.2);
+  --success:#2d8a56; --success-bg:#efffed;
+  --danger:#cc1122;  --danger-bg:#fff0f0;
+  --info:#3366cc;    --info-bg:#eef3ff;
+  --sh-xs:0 1px 4px rgba(180,80,100,.08); --sh-sm:0 2px 10px rgba(180,80,100,.1);
+  --sh:0 4px 20px rgba(180,80,100,.12); --sh-lg:0 10px 36px rgba(180,80,100,.16);
+}
+[data-theme="sakura"] body { background:var(--bg) }
+[data-theme="sakura"] .setup-wrap {
+  background:radial-gradient(ellipse 90% 50% at 50% -10%,rgba(255,140,160,.18) 0%,transparent 65%),var(--bg);
+}
+[data-theme="sakura"] .msgs { background:#fef8fa }
+[data-theme="sakura"] .logo-mark { background:linear-gradient(135deg,#e8608a,#a01a40) }
+[data-theme="sakura"] .btn-primary { background:linear-gradient(135deg,#e8608a,#a8184a) }
+[data-theme="sakura"] .send-btn { background:linear-gradient(135deg,#e8608a,#a8184a) }
+[data-theme="sakura"] .ai-bar { background:#fff0f3; border-bottom-color:var(--border) }
+
+/* ── 5. FOREST — earthy deep green wellness ── */
+[data-theme="forest"] {
+  --bg:#0a120a; --surface:#0f1a0e; --surface2:#152015;
+  --surface3:#1a2a1a; --surface4:#1e301e;
+  --border:rgba(80,180,80,.1); --border2:rgba(80,180,80,.18); --border3:rgba(80,180,80,.28);
+  --text:#d4f0d4; --text2:#7aaa7a; --text3:#3a6a3a;
+  --amber:#4ade80; --amber2:#22c55e; --amber-light:rgba(74,222,128,.08);
+  --amber-mid:rgba(74,222,128,.22); --amber-dim:rgba(74,222,128,.06);
+  --amber-glow:rgba(74,222,128,.18);
+  --success:#86efac; --success-bg:rgba(134,239,172,.08);
+  --danger:#f87171;  --danger-bg:rgba(248,113,113,.08);
+  --info:#67e8f9;    --info-bg:rgba(103,232,249,.08);
+  --sh-xs:0 1px 4px rgba(0,0,0,.4); --sh-sm:0 2px 12px rgba(0,0,0,.5);
+  --sh:0 4px 24px rgba(0,0,0,.55); --sh-lg:0 12px 48px rgba(0,0,0,.65);
+}
+[data-theme="forest"] body { background:var(--bg) }
+[data-theme="forest"] .setup-wrap {
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(74,222,128,.08) 0%,transparent 65%),var(--bg);
+}
+[data-theme="forest"] .msgs { background:var(--bg) }
+[data-theme="forest"] .logo-mark { background:linear-gradient(135deg,#22c55e,#15803d) }
+[data-theme="forest"] .btn-primary { background:linear-gradient(135deg,#22c55e,#15803d) }
+[data-theme="forest"] .send-btn { background:linear-gradient(135deg,#22c55e,#15803d) }
+[data-theme="forest"] .other .bubble { background:var(--surface2); border-color:var(--border2) }
+[data-theme="forest"] .ai-bar { background:rgba(74,222,128,.05); border-bottom-color:rgba(74,222,128,.18) }
+[data-theme="forest"] .msg-ai::before { background:linear-gradient(90deg,transparent,rgba(74,222,128,.4),transparent) }
+
+/* ── 6. OCEAN — cool airy sky blue ── */
+[data-theme="ocean"] {
+  --bg:#eef8ff; --surface:#ffffff; --surface2:#f0f8ff;
+  --surface3:#e0f2fe; --surface4:#bae6fd;
+  --border:#bfdbf7; --border2:#93c5f7; --border3:#60a5f7;
+  --text:#0c2a40; --text2:#4a7a9a; --text3:#90bbd0;
+  --amber:#0284c7; --amber2:#0369a1; --amber-light:#e0f2fe;
+  --amber-mid:#bae6fd; --amber-dim:rgba(2,132,199,.08);
+  --amber-glow:rgba(2,132,199,.2);
+  --success:#0d9488; --success-bg:#f0fdfa;
+  --danger:#dc2626;  --danger-bg:#fef2f2;
+  --info:#7c3aed;    --info-bg:#f5f3ff;
+  --sh-xs:0 1px 4px rgba(2,100,180,.08); --sh-sm:0 2px 10px rgba(2,100,180,.1);
+  --sh:0 4px 20px rgba(2,100,180,.12); --sh-lg:0 10px 36px rgba(2,100,180,.16);
+}
+[data-theme="ocean"] body { background:var(--bg) }
+[data-theme="ocean"] .setup-wrap {
+  background:radial-gradient(ellipse 90% 60% at 50% -10%,rgba(2,132,199,.12) 0%,transparent 65%),var(--bg);
+}
+[data-theme="ocean"] .msgs { background:#f0f8ff }
+[data-theme="ocean"] .logo-mark { background:linear-gradient(135deg,#0ea5e9,#0369a1) }
+[data-theme="ocean"] .btn-primary { background:linear-gradient(135deg,#0ea5e9,#0369a1) }
+[data-theme="ocean"] .send-btn { background:linear-gradient(135deg,#0ea5e9,#0369a1) }
+[data-theme="ocean"] .ai-bar { background:#e0f2fe; border-bottom-color:#bae6fd }
+
+/* ── 7. OBSIDIAN — ultra minimal pure black & white ── */
+[data-theme="obsidian"] {
+  --bg:#000000; --surface:#111111; --surface2:#1a1a1a;
+  --surface3:#222222; --surface4:#2a2a2a;
+  --border:rgba(255,255,255,.08); --border2:rgba(255,255,255,.14); --border3:rgba(255,255,255,.22);
+  --text:#ffffff; --text2:#888888; --text3:#444444;
+  --amber:#ffffff; --amber2:#cccccc; --amber-light:rgba(255,255,255,.06);
+  --amber-mid:rgba(255,255,255,.14); --amber-dim:rgba(255,255,255,.04);
+  --amber-glow:rgba(255,255,255,.1);
+  --success:#aaaaaa; --success-bg:rgba(255,255,255,.05);
+  --danger:#ffffff;  --danger-bg:rgba(255,255,255,.05);
+  --info:#aaaaaa;    --info-bg:rgba(255,255,255,.05);
+  --sh-xs:none; --sh-sm:none; --sh:none; --sh-lg:none;
+  --r-xs:0px; --r-sm:0px; --r:0px; --r-lg:0px; --r-xl:0px;
+}
+[data-theme="obsidian"] body { background:#000 }
+[data-theme="obsidian"] .card,
+[data-theme="obsidian"] .modal,
+[data-theme="obsidian"] .room-card,
+[data-theme="obsidian"] .slide-panel { border-radius:0 }
+[data-theme="obsidian"] .setup-wrap { background:#000 }
+[data-theme="obsidian"] .msgs { background:#000 }
+[data-theme="obsidian"] .logo-mark { background:#222; box-shadow:none; border-radius:0 }
+[data-theme="obsidian"] .btn-primary { background:#fff; color:#000; box-shadow:none }
+[data-theme="obsidian"] .btn-primary:hover { background:#ddd }
+[data-theme="obsidian"] .send-btn { background:#fff; color:#000; box-shadow:none; border-radius:0 }
+[data-theme="obsidian"] .other .bubble { background:var(--surface2); border-color:var(--border2) }
+[data-theme="obsidian"] .ai-bar { background:var(--surface); border-bottom-color:var(--border2) }
+[data-theme="obsidian"] .msg-ai::before { background:rgba(255,255,255,.15) }
+[data-theme="obsidian"] .input-shell { border-radius:0 }
+[data-theme="obsidian"] .send-btn { border-radius:0 }
+
+/* ── THEME PICKER MODAL ── */
+.theme-grid {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px;
+}
+@media(max-width:400px){ .theme-grid{grid-template-columns:repeat(3,1fr)} }
+.theme-chip {
+  border:2px solid var(--border);border-radius:var(--r-sm);
+  overflow:hidden;cursor:pointer;transition:border-color .15s,transform .12s;
+  display:flex;flex-direction:column;align-items:center;
+}
+.theme-chip:hover { transform:translateY(-2px);border-color:var(--border2) }
+.theme-chip.active { border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-dim) }
+.theme-preview {
+  width:100%;height:44px;display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.theme-label { font-size:10px;font-weight:600;padding:4px 0;color:var(--text2);letter-spacing:.3px }
+</style>
+</body>
+</html>
