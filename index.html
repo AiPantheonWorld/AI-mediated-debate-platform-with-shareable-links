@@ -703,6 +703,7 @@ a{color:var(--accent);text-decoration:none}
       <option value="professional">💼 Professional</option>
       <option value="family">👨‍👩‍👧 Family</option>
       <option value="debate">🧠 Debate</option>
+      <option value="custom">✏️ Custom</option>
     </select>
     <div class="auto-wrap">
       <label class="toggle"><input type="checkbox" id="chat-auto-tog" onchange="onAutoToggle(this.checked)"><span class="toggle-track"></span></label>
@@ -777,22 +778,23 @@ a{color:var(--accent);text-decoration:none}
   <h3>Ask Accord</h3>
   <p class="subtitle">Add a custom focus for this AI review, or just hit Ask to analyse the conversation as-is.</p>
   <div class="field">
-    <label>Custom question or focus (optional)</label>
-    <textarea id="ask-custom" rows="3" placeholder="e.g. Focus on the unspoken emotional needs here... or: What is the power dynamic at play?"></textarea>
-  </div>
-  <div class="field">
-    <label>Persona</label>
-    <select id="ask-persona">
-      <option value="default">⚖️ Default Mediator</option>
+    <label>Choose Persona</label>
+    <select id="ask-persona" onchange="updateAskModalUI(this.value)">
+      <option value="default">⚖️ Mediator — balanced, neutral</option>
       <option value="couple">💑 Couple / Romantic</option>
       <option value="friends">🤝 Friends</option>
       <option value="professional">💼 Professional</option>
       <option value="family">👨‍👩‍👧 Family</option>
       <option value="debate">🧠 Debate / Intellectual</option>
+      <option value="custom">✏️ Custom — write your own prompt</option>
     </select>
   </div>
+  <div class="field" id="ask-custom-field" style="display:none">
+    <label>Your custom instructions for Accord</label>
+    <textarea id="ask-custom" rows="4" placeholder="e.g. You are a wise elder helping these two people find common ground. Focus on their shared values and long-term friendship. Speak with warmth and wisdom."></textarea>
+  </div>
   <div style="display:flex;gap:8px;margin-top:18px">
-    <button class="btn btn-primary flex-1" onclick="submitAsk()">⚖️ Ask Now</button>
+    <button class="btn btn-primary flex-1" id="ask-now-btn" onclick="submitAsk()">⚖️ Ask Now</button>
     <button class="btn btn-ghost" onclick="closeOverlayById('overlay-ask')">Cancel</button>
   </div>
 </div></div>
@@ -1343,39 +1345,40 @@ function renderAllMessages() {
   const wrap = document.getElementById('msgs');
   if (!wrap) return;
 
-  // Sort all messages client-side
   const sorted = Array.from(_msgs.values()).sort((a,b) => sortKey(a) - sortKey(b));
+  let addedAI = false;
 
-  // Efficient diff: only add/update changed elements
   sorted.forEach(msg => {
     const existing = document.getElementById('msg-' + msg.id);
     if (!existing) {
-      // New message — find correct position
       const el = buildMsgElement(msg);
-      // Insert in sorted position
       const nextMsg = sorted[sorted.indexOf(msg) + 1];
       const nextEl = nextMsg ? document.getElementById('msg-' + nextMsg.id) : null;
       if (nextEl) wrap.insertBefore(el, nextEl);
       else wrap.appendChild(el);
+      if (msg.isAI) addedAI = true;
     } else if (msg.isAI) {
-      // AI messages can change (pending -> resolved), always re-render
       const fresh = buildMsgElement(msg);
       existing.replaceWith(fresh);
-    }
-    // User messages don't change after send, skip re-render unless edited
-    else if (msg.edited) {
+      if (!msg.pending) addedAI = true;
+    } else if (msg.edited) {
       const fresh = buildMsgElement(msg);
       existing.replaceWith(fresh);
     }
   });
 
-  // Remove deleted messages
   wrap.querySelectorAll('[id^="msg-"]').forEach(el => {
     const id = el.id.replace('msg-', '');
     if (!_msgs.has(id)) el.remove();
   });
 
-  scrollBottom();
+  // Use double RAF to ensure DOM layout is complete before scrolling
+  // (especially important for AI messages which can be tall)
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      wrap.scrollTop = wrap.scrollHeight;
+    });
+  });
 }
 
 function listenPresence() {
@@ -1748,6 +1751,23 @@ function onPersonaChange(val) {
   S_persona = val;
   const sel = document.getElementById('ask-persona');
   if (sel) sel.value = val;
+  // If user picks custom from the bar, open the modal immediately
+  if (val === 'custom') {
+    showAskModal();
+  }
+}
+
+// handleAskClick: standard personas go straight to AI; Custom opens modal
+function handleAskClick() {
+  if (S_persona === 'custom') {
+    // Custom persona — open modal to enter their own prompt
+    showAskModal();
+  } else {
+    // Standard persona — call AI directly, no modal needed
+    const allMsgs = Array.from(_msgs.values()).filter(m => !m.pending && !m.isAI);
+    if (allMsgs.length < 1) { toast('Need at least one message to analyse', 'info', 3000); return; }
+    invokeAI(null);
+  }
 }
 
 function showAskModal() {
@@ -1755,7 +1775,22 @@ function showAskModal() {
   if (askPersona) askPersona.value = S_persona;
   const askCustom = document.getElementById('ask-custom');
   if (askCustom) askCustom.value = '';
+  // Only show custom textarea when custom persona is selected
+  updateAskModalUI(S_persona);
   document.getElementById('overlay-ask').classList.add('show');
+}
+
+function updateAskModalUI(persona) {
+  const customField = document.getElementById('ask-custom-field');
+  if (customField) {
+    customField.style.display = (persona === 'custom') ? 'block' : 'none';
+  }
+  // Update button text to reflect persona
+  const btn = document.getElementById('ask-now-btn');
+  if (btn) {
+    const p = PERSONAS[persona] || PERSONAS.default;
+    btn.innerHTML = p.label.split(' ')[0] + ' Ask Now';
+  }
 }
 
 async function submitAsk() {
