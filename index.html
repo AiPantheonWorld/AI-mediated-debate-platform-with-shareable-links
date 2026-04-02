@@ -4,10 +4,114 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Accord · AI Dialogue</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#9a6f1e">
+<!-- Apple PWA tags (Safari/iOS) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Accord">
+<link rel="apple-touch-icon" href="icon-192.png">
+<!-- Android/Chrome -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Accord">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#9a6f1e">
+<!-- Apple PWA tags (Safari/iOS) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Accord">
+<link rel="apple-touch-icon" href="icon-192.png">
+<!-- Android/Chrome -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Accord">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js">
+// ═══ PWA SETUP ═══════════════════════════════════════════════════════
+
+let _installPrompt = null; // Android Chrome deferred install event
+
+function initPWA() {
+  // Register service worker for offline support + caching
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('Accord SW registered, scope:', reg.scope);
+    }).catch(err => {
+      // sw.js not found (local dev) — silently ignore
+      console.log('SW not registered (expected on local dev):', err.message);
+    });
+  }
+
+  // Check if already installed as PWA — don't show banner
+  const isInstalled = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true; // iOS Safari
+  if (isInstalled) return;
+
+  // Don't show again if dismissed recently (7 days)
+  const dismissed = localStorage.getItem('pwa_dismissed');
+  if (dismissed && Date.now() - parseInt(dismissed) < 7 * 86400000) return;
+
+  // Detect iOS — needs manual instructions
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if (isIOS && isSafari) {
+    // Show iOS-specific instructions after a short delay
+    setTimeout(() => showIOSBanner(), 4000);
+    return;
+  }
+
+  // Android/Chrome: listen for the install event
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); // Don't show browser's own prompt
+    _installPrompt = e;
+    setTimeout(() => showAndroidBanner(), 3000);
+  });
+}
+
+function showAndroidBanner() {
+  const banner = document.getElementById('pwa-banner');
+  const sub = document.getElementById('pwa-banner-sub');
+  const btn = document.getElementById('pwa-install-btn');
+  if (!banner) return;
+  if (sub) sub.textContent = 'Tap the button to install Accord. Works offline, launches full screen.';
+  if (btn) { btn.textContent = '+ Install App'; }
+  banner.classList.add('show');
+}
+
+function showIOSBanner() {
+  const banner = document.getElementById('pwa-banner');
+  const sub = document.getElementById('pwa-banner-sub');
+  const btn = document.getElementById('pwa-install-btn');
+  if (!banner) return;
+  if (sub) sub.innerHTML = 'Tap <strong style="font-style:normal">Share</strong> (the box with arrow) then <strong style="font-style:normal">Add to Home Screen</strong> in Safari.';
+  if (btn) { btn.textContent = 'Got it'; btn.onclick = dismissBanner; }
+  banner.classList.add('show');
+}
+
+async function triggerInstall() {
+  if (!_installPrompt) return;
+  const result = await _installPrompt.prompt();
+  if (result.outcome === 'accepted') {
+    dismissBanner();
+    toast('Accord added to your home screen!', 'ok', 4000);
+  }
+  _installPrompt = null;
+}
+
+function dismissBanner() {
+  const banner = document.getElementById('pwa-banner');
+  if (banner) banner.classList.remove('show');
+  localStorage.setItem('pwa_dismissed', Date.now().toString());
+}
+
+// Init PWA after page loads
+window.addEventListener('load', () => {
+  setTimeout(initPWA, 1000); // Give Firebase time to initialise first
+});
+
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
 /* ╔══════════════════════════════════════════════════════════╗
@@ -647,6 +751,27 @@ a{color:var(--accent);text-decoration:none}
 .gif-item{border-radius:var(--r1);overflow:hidden;cursor:pointer;aspect-ratio:16/9;background:var(--surface3)}
 .gif-item img{width:100%;height:100%;object-fit:cover;display:block}
 .gif-item:hover{opacity:.85}
+
+/* ── PWA INSTALL BANNER ─────────────────────────────── */
+.pwa-banner{
+  position:fixed;bottom:0;left:0;right:0;z-index:800;
+  background:var(--surface);border-top:1.5px solid var(--accent-mid);
+  padding:14px 16px;padding-bottom:max(14px,env(safe-area-inset-bottom));
+  display:none;animation:slideUpBanner .3s ease;
+  box-shadow:0 -4px 20px rgba(0,0,0,.12);
+}
+.pwa-banner.show{display:flex;gap:12px;align-items:flex-start}
+@keyframes slideUpBanner{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.pwa-banner-icon{font-size:26px;flex-shrink:0;margin-top:2px}
+.pwa-banner-text{flex:1;min-width:0}
+.pwa-banner-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.pwa-banner-sub{font-size:12px;color:var(--text2);line-height:1.5}
+.pwa-banner-actions{display:flex;gap:7px;margin-top:10px}
+.pwa-install-btn{background:var(--accent);color:#fff;border:none;border-radius:var(--r-sm);
+  padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.pwa-dismiss-btn{background:none;border:1.5px solid var(--border);border-radius:var(--r-sm);
+  padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text2);cursor:pointer}
+.pwa-close-btn{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:2px;flex-shrink:0;line-height:1;align-self:flex-start}
 </style>
 </head>
 <body>
@@ -2279,6 +2404,105 @@ function fmtTime(d){
 function contrastColor(hex){if(!hex||hex[0]!=='#')return '#fff';const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return(0.299*r+0.587*g+0.114*b)/255>0.55?'#111':'#fff';}
 function scrollBottom(){const el=document.getElementById('msgs');if(el)requestAnimationFrame(()=>{el.scrollTop=el.scrollHeight;});}
 function toast(msg,type='info',duration=3200){const el=document.getElementById('notif');el.textContent=msg;el.className=`notif show ${type}`;clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),duration);}
+
+// ═══ PWA SETUP ═══════════════════════════════════════════════════════
+
+let _installPrompt = null; // Android Chrome deferred install event
+
+function initPWA() {
+  // Register service worker for offline support + caching
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('Accord SW registered, scope:', reg.scope);
+    }).catch(err => {
+      // sw.js not found (local dev) — silently ignore
+      console.log('SW not registered (expected on local dev):', err.message);
+    });
+  }
+
+  // Check if already installed as PWA — don't show banner
+  const isInstalled = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true; // iOS Safari
+  if (isInstalled) return;
+
+  // Don't show again if dismissed recently (7 days)
+  const dismissed = localStorage.getItem('pwa_dismissed');
+  if (dismissed && Date.now() - parseInt(dismissed) < 7 * 86400000) return;
+
+  // Detect iOS — needs manual instructions
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+  if (isIOS && isSafari) {
+    // Show iOS-specific instructions after a short delay
+    setTimeout(() => showIOSBanner(), 4000);
+    return;
+  }
+
+  // Android/Chrome: listen for the install event
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); // Don't show browser's own prompt
+    _installPrompt = e;
+    setTimeout(() => showAndroidBanner(), 3000);
+  });
+}
+
+function showAndroidBanner() {
+  const banner = document.getElementById('pwa-banner');
+  const sub = document.getElementById('pwa-banner-sub');
+  const btn = document.getElementById('pwa-install-btn');
+  if (!banner) return;
+  if (sub) sub.textContent = 'Tap the button to install Accord. Works offline, launches full screen.';
+  if (btn) { btn.textContent = '+ Install App'; }
+  banner.classList.add('show');
+}
+
+function showIOSBanner() {
+  const banner = document.getElementById('pwa-banner');
+  const sub = document.getElementById('pwa-banner-sub');
+  const btn = document.getElementById('pwa-install-btn');
+  if (!banner) return;
+  if (sub) sub.innerHTML = 'Tap <strong style="font-style:normal">Share</strong> (the box with arrow) then <strong style="font-style:normal">Add to Home Screen</strong> in Safari.';
+  if (btn) { btn.textContent = 'Got it'; btn.onclick = dismissBanner; }
+  banner.classList.add('show');
+}
+
+async function triggerInstall() {
+  if (!_installPrompt) return;
+  const result = await _installPrompt.prompt();
+  if (result.outcome === 'accepted') {
+    dismissBanner();
+    toast('Accord added to your home screen!', 'ok', 4000);
+  }
+  _installPrompt = null;
+}
+
+function dismissBanner() {
+  const banner = document.getElementById('pwa-banner');
+  if (banner) banner.classList.remove('show');
+  localStorage.setItem('pwa_dismissed', Date.now().toString());
+}
+
+// Init PWA after page loads
+window.addEventListener('load', () => {
+  setTimeout(initPWA, 1000); // Give Firebase time to initialise first
+});
+
 </script>
+
+<!-- PWA INSTALL BANNER -->
+<div class="pwa-banner" id="pwa-banner">
+  <div class="pwa-banner-icon">⚖️</div>
+  <div class="pwa-banner-text">
+    <div class="pwa-banner-title">Add Accord to your home screen</div>
+    <div class="pwa-banner-sub" id="pwa-banner-sub">Install as an app for the best experience — works offline, full screen, no browser bar.</div>
+    <div class="pwa-banner-actions">
+      <button class="pwa-install-btn" id="pwa-install-btn" onclick="triggerInstall()">Add to Home Screen</button>
+      <button class="pwa-dismiss-btn" onclick="dismissBanner()">Not now</button>
+    </div>
+  </div>
+  <button class="pwa-close-btn" onclick="dismissBanner()">✕</button>
+</div>
+
 </body>
 </html>
