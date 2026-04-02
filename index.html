@@ -256,9 +256,11 @@ a{color:var(--accent);text-decoration:none}
 /* Header — clean glass-like */
 .chat-header{
   background:var(--surface);border-bottom:1px solid var(--border);
-  padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;
-  box-shadow:var(--sh1);z-index:10;min-height:54px;
+  padding:8px 10px;display:flex;align-items:center;gap:6px;flex-shrink:0;
+  box-shadow:var(--sh1);z-index:10;min-height:48px;
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
 }
+.chat-header::-webkit-scrollbar{display:none;}
 .chat-logo{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--accent);white-space:nowrap}
 .room-name-pill{
   font-size:12px;color:var(--text2);background:var(--surface2);
@@ -281,9 +283,11 @@ a{color:var(--accent);text-decoration:none}
 /* AI Bar — refined strip */
 .ai-bar{
   background:var(--surface);border-bottom:1px solid var(--border);
-  padding:6px 12px;display:flex;align-items:center;gap:7px;
-  flex-shrink:0;flex-wrap:wrap;
+  padding:5px 10px;display:flex;align-items:center;gap:6px;
+  flex-shrink:0;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;-ms-overflow-style:none;white-space:nowrap;min-height:40px;
 }
+.ai-bar::-webkit-scrollbar{display:none;}
 .ai-bar-tag{
   font-size:9px;font-weight:700;color:var(--accent);
   text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;
@@ -624,6 +628,25 @@ a{color:var(--accent);text-decoration:none}
   #chat-model-sel{max-width:110px}
   #persona-sel{max-width:90px}
 }
+
+.reactions{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.reaction-pill{display:inline-flex;align-items:center;gap:3px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:3px 8px;font-size:13px;cursor:pointer;transition:all .15s;user-select:none;}
+.reaction-pill:hover{border-color:var(--accent);background:var(--accent-bg)}
+.reaction-pill.mine{border-color:var(--accent);background:var(--accent-bg);color:var(--accent2)}
+.reaction-count{font-size:11px;font-weight:600;color:var(--text2)}
+.reaction-picker{display:none;position:absolute;left:0;bottom:calc(100% + 6px);background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r2);padding:6px 8px;z-index:60;white-space:nowrap;box-shadow:var(--sh3);flex-wrap:wrap;width:200px;gap:3px;}
+.reaction-picker.open{display:flex}
+.reaction-pick-btn{font-size:20px;cursor:pointer;padding:4px;border-radius:var(--r1);transition:background .1s;line-height:1}
+.reaction-pick-btn:hover{background:var(--surface3)}
+.gif-btn{background:none;border:1px solid var(--border);color:var(--text2);cursor:pointer;padding:2px 7px;border-radius:var(--r1);font-size:10px;font-weight:700;letter-spacing:.5px;flex-shrink:0;transition:all .15s;line-height:20px;}
+.gif-btn:hover{border-color:var(--accent);color:var(--accent)}
+.gif-search{position:absolute;bottom:72px;left:12px;width:300px;max-width:90vw;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r3);box-shadow:var(--sh4);z-index:100;display:none;overflow:hidden;}
+.gif-search.open{display:flex;flex-direction:column}
+.gif-search-inp{border:none;border-bottom:1px solid var(--border);padding:10px 14px;background:var(--surface2);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;width:100%;}
+.gif-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px;max-height:200px;overflow-y:auto}
+.gif-item{border-radius:var(--r1);overflow:hidden;cursor:pointer;aspect-ratio:16/9;background:var(--surface3)}
+.gif-item img{width:100%;height:100%;object-fit:cover;display:block}
+.gif-item:hover{opacity:.85}
 </style>
 </head>
 <body>
@@ -676,7 +699,11 @@ a{color:var(--accent);text-decoration:none}
   </div>
   <div class="field mt12" id="interval-field">
     <label>AI speaks after every…</label>
-    <select id="inp-interval"><option value="3">3 messages</option><option value="5" selected>5 messages</option><option value="8">8 messages</option><option value="15">15 messages</option></select>
+    <select id="inp-interval"><option value="3">3 messages</option><option value="5">5 messages</option><option value="8">8 messages</option><option value="15">15 messages</option></select>
+  </div>
+  <div class="toggle-row" style="margin-bottom:4px">
+    <div class="toggle-info"><div class="tl">Private Room</div><div class="td">New joiners need host approval before they can chat</div></div>
+    <label class="toggle"><input type="checkbox" id="tog-private"><span class="toggle-track"></span></label>
   </div>
   <button class="btn btn-primary btn-full mt18" id="create-btn" onclick="doCreateRoom()">✦ Create Room</button>
   <button class="btn btn-ghost btn-full mt8" onclick="showScreen('screen-rooms')">← Back</button>
@@ -722,7 +749,8 @@ a{color:var(--accent);text-decoration:none}
   </div>
   <div id="status-bar" style="display:none;padding:7px 14px;font-size:12px;font-weight:500;text-align:center;flex-shrink:0;background:var(--danger-bg);color:var(--danger);border-bottom:1px solid rgba(185,28,28,.2)"></div>
   <div class="msgs" id="msgs"></div>
-  <div class="emoji-picker" id="emoji-picker"></div>
+  <div class="gif-search" id="gif-search"><input class="gif-search-inp" id="gif-inp" type="text" placeholder="Search GIFs..." oninput="searchGifs(this.value)" onfocus="if(!this.value)searchGifs('reaction')"><div class="gif-grid" id="gif-grid"><div style="padding:10px;font-size:12px;color:var(--text3)">Type to search GIFs...</div></div></div>
+<div class="emoji-picker" id="emoji-picker"></div>
   <div class="reply-bar" id="reply-bar">
     <div style="font-size:15px;color:var(--amber2)">↩</div>
     <div class="reply-preview"><div class="rp-name" id="rp-name"></div><div class="rp-text" id="rp-text"></div></div>
@@ -731,12 +759,22 @@ a{color:var(--accent);text-decoration:none}
   <div class="input-area">
     <div class="input-shell">
       <button class="emoji-btn" onclick="toggleEmojiPicker()">😊</button>
+      <button class="gif-btn" onclick="toggleGifSearch()">GIF</button>
       <textarea id="msg-input" rows="1" placeholder="Share your thoughts…" onkeydown="onInputKey(event)" oninput="autoGrow(this)"></textarea>
     </div>
     <button class="send-btn" onclick="sendMessage()">➤</button>
   </div>
 </div>
 
+
+<div id="screen-pending" class="screen screen-scroll">
+<div class="setup-wrap"><div class="card" style="text-align:center">
+  <div class="logo-mark" style="margin:0 auto 16px;width:56px;height:56px;font-size:28px">⏳</div>
+  <h1 style="font-size:22px">Waiting for approval</h1>
+  <p class="subtitle" id="pending-subtitle">The host must approve your request before you can join.</p>
+  <div style="font-size:13px;color:var(--text3);margin-top:8px">You will be admitted automatically once approved.</div>
+  <button class="btn btn-ghost btn-full mt18" onclick="showScreen('screen-rooms');renderRoomsList()">Back to rooms</button>
+</div></div></div>
 <!-- PARTICIPANTS PANEL -->
 <div class="slide-panel" id="participants-panel">
   <div class="panel-header"><span class="panel-title">Participants</span><button class="panel-close" onclick="toggleParticipants()">✕</button></div>
@@ -868,6 +906,11 @@ a{color:var(--accent);text-decoration:none}
   </div>
   <button class="btn btn-primary btn-full mt18" onclick="saveSettings()">Save Settings</button>
   <button class="btn btn-ghost btn-full mt8" onclick="closeOverlayById('overlay-settings')">Cancel</button>
+  <div id="delete-room-section" style="display:none;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+    <div style="font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">Danger Zone</div>
+    <button class="btn btn-full" style="background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(192,57,43,.3)" onclick="confirmDeleteRoom()">Delete Room Permanently</button>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px">Deletes all messages and data. Host only.</div>
+  </div>
 </div></div>
 
 <!-- MODAL: THEME -->
@@ -912,6 +955,8 @@ const FIREBASE_CONFIG = {
 // ═══════════════════════════════════════════════════════
 // MODELS
 // ═══════════════════════════════════════════════════════
+const REACTION_EMOJIS=['❤️','😂','😮','😢','😡','👍','👎','🔥','🙏','🎉'];
+
 const MODELS = [
   // ─── FREE ($0) — verified April 2026 ───────────────────────────────
   {id:'openrouter/free',                               label:'Auto-Free (best available)',  group:'🆓 Free'},
@@ -961,7 +1006,7 @@ const LANGUAGES=[
   {code:'ur',label:'Urdu / اردو'},{code:'vi',label:'Vietnamese / Tiếng Việt'},
 ];
 
-const EMOJI_SET=['😀','😂','🥹','😊','😍','🥰','😘','😭','😤','😩','🤔','😮','😱','🙄','😴','🤗','🤝','👍','👎','❤️','🔥','✨','💯','🎉','🙏','💪','👏','🫶','💀','😅','😆','😁','😄','🥲','😔','😟','😢','😡','🤯','🤩','😎','🥺','🤐','🤫','👋','✋','👌','✌️','🤞','👊','💋','💔','❣️','💕','💖','💘','🫀'];
+const EMOJI_SET=['😀','😂','🥹','😊','😍','🥰','😘','🤩','😎','😏','😒','🙄','😮','😱','🤯','😭','😤','😩','😡','😔','😟','😢','😅','😆','😁','🥺','😓','😰','🤔','🤗','🫡','🤫','🤭','😇','🥳','🤑','😈','💀','☠️','🤡','😵','🥴','😷','🤒','🤢','🤮','😴','🥱','😪','🫠','👍','👎','👌','🤌','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','👋','✋','🖐️','🤚','🫱','🫲','🫵','🤜','🤛','👊','✊','🙌','👐','🫶','🤲','🙏','💪','👀','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💌','🫀','🌹','🌺','🌸','🌼','🌻','🍀','🌈','⭐','🌟','✨','💫','🔥','💥','🎉','🎊','🎈','🎁','🏆','💯','✅','❌','⚡','🌊','🍕','🍰','☕','🍺','👑','💎','🚀','🌙','☀️','❄️','🎵','🎶'];
 
 // System prompt provided by PERSONAS[S_persona].prompt via getSystemPrompt()
 
@@ -1069,7 +1114,7 @@ const S = {
   pickedColor:COLORS[0], myLang:'en',
   translateMode:'original', replyTo:null,
   editMode:null, msgsSinceAI:0,
-  thinking:false, subs:[], contextWindow:15, minMsgsForAI:6,
+  thinking:false, subs:[], contextWindow:15, minMsgsForAI:10,
   myProfile:{bio:'',style:'',context:''},
 };
 let _summaryLock = false;
@@ -1275,12 +1320,13 @@ async function doCreateRoom() {
   const roomName = document.getElementById('inp-roomname').value.trim() || 'Dialogue Room';
   if (!orKey) { restore(); toast('Please enter your OpenRouter API key','err'); return; }
 
+  const isPrivate = document.getElementById('tog-private')?.checked||false;
   const roomId = uid8(6);
-  S.room = { id:roomId, name:roomName, orKey, orModel:model, autoAI, autoInterval:interval };
+  S.room = { id:roomId, name:roomName, orKey, orModel:model, autoAI, autoInterval:interval, isPrivate };
   try {
     await S.db.collection('rooms').doc(roomId).set({
       name:roomName, createdAt:firebase.firestore.FieldValue.serverTimestamp(),
-      creatorId:S.user.id, orKey, orModel:model, autoAI, autoInterval:interval, msgCount:0, summary:'',
+      creatorId:S.user.id, orKey, orModel:model, autoAI, autoInterval:interval, isPrivate, msgCount:0, summary:'',
     });
     await S.db.collection('rooms').doc(roomId).collection('presence').doc(S.user.id).set({
       name:S.user.name, color:S.user.color, lang:S.myLang, role:'host',
@@ -1506,6 +1552,10 @@ function buildMsgElement(msg) {
 
   const replyHtml = msg.replyTo?`<div class="quote-bar"><div class="quote-name">${esc(msg.replyTo.userName)}</div><div class="quote-text">${esc(msg.replyTo.preview)}</div></div>`:'';
   const editedTag = msg.edited?'<span class="edited-tag">(edited)</span>':'';
+  if (msg.gifUrl) {
+    el.innerHTML = metaHtml + `<div class="bubble" style="${bg}"><img src="${esc(msg.gifUrl)}" alt="${esc(msg.gifAlt||'GIF')}" style="max-width:220px;border-radius:10px;display:block"></div>`;
+    return el;
+  }
   const contentHtml = (S.translateMode==='translated'&&msg.translations?.[S.myLang])
     ? esc(msg.translations[S.myLang]) : esc(msg.content||'');
   const transHtml = (S.translateMode==='both'&&msg.translations?.[S.myLang])
@@ -1514,12 +1564,15 @@ function buildMsgElement(msg) {
     ? `<div class="msg-meta" style="justify-content:flex-end"><span class="time">${ts}</span><span class="name" style="color:${col}">You</span></div>`
     : `<div class="msg-meta"><span class="name" style="color:${col}">${esc(msg.userName)}</span><span style="font-size:10px">${ts}</span></div>`;
   const actionsHtml=`<div class="msg-actions">
+    <button class="msg-action-btn" onclick="toggleReactionPicker('${msg.id}',this)">😊</button>
+    <div class="reaction-picker" id="rp-${msg.id}">${REACTION_EMOJIS.map(e=>`<span class="reaction-pick-btn" onclick="addReaction('${msg.id}','${e}')">${e}</span>`).join('')}</div>
     <button class="msg-action-btn" onclick="startReply('${msg.id}','${esc(msg.userName||'')}','${esc((msg.content||'').substring(0,60))}')">↩</button>
     ${own?`<button class="msg-action-btn" onclick="startEdit('${msg.id}','${esc(msg.content||'')}')">✏️</button>`:''}
     <button class="msg-action-btn" onclick="navigator.clipboard.writeText('${esc(msg.content||'')}').then(()=>toast('Copied','ok'))">📋</button>
   </div>`;
 
-  el.innerHTML=metaHtml+`<div class="bubble" style="${bg}">${actionsHtml}${replyHtml}${contentHtml}${editedTag}${transHtml}</div>`;
+  const reactHtml = buildReactionsHtml(msg.id, msg.reactions||{});
+  el.innerHTML=metaHtml+`<div class="bubble" style="${bg}">${actionsHtml}${replyHtml}${contentHtml}${editedTag}${transHtml}</div>${reactHtml}`;
 
   if (S.translateMode!=='original'&&msg.userLang&&msg.userLang!==S.myLang&&!msg.translations?.[S.myLang]) {
     translateMsg(msg.id, msg.content||'');
@@ -1532,6 +1585,26 @@ function buildMsgElement(msg) {
 // ═══════════════════════════════════════════════════════
 function renderParticipantsPanel(members) {
   const myRole = members.find(m=>m.id===S.user.id)?.role||'member';
+  // Approval requests for private room host
+  if (S.room?.isPrivate && members.find(m=>m.id===S.user.id)?.role==='host') {
+    S.db.collection('rooms').doc(S.room.id).collection('pending').get().then(snap => {
+      if (!snap || snap.empty) return;
+      let html = '<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">Waiting for approval</div>';
+      snap.docs.forEach(d => {
+        const p = d.data();
+        const uid = d.id;
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">';
+        html += '<div style="width:32px;height:32px;border-radius:50%;background:' + (p.color||'#60a5fa') + ';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff">' + (p.name||'?')[0].toUpperCase() + '</div>';
+        html += '<div style="flex:1;font-size:13px">' + esc(p.name||'Unknown') + '</div>';
+        html += '<button class="btn-ai" style="font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer" data-uid="' + uid + '" onclick="approveJoin(this.dataset.uid)">Approve</button>';
+        html += '<button class="ma-btn danger" data-uid="' + uid + '" onclick="denyJoin(this.dataset.uid)">Deny</button>';
+        html += '</div>';
+      });
+      html += '</div>';
+      const body = document.getElementById('panel-body');
+      if (body) body.insertAdjacentHTML('afterbegin', html);
+    }).catch(()=>{});
+  }
   document.getElementById('panel-body').innerHTML = members.map(m => {
     const isMe = m.id===S.user.id;
     const init = (m.name||'?')[0].toUpperCase();
@@ -1898,6 +1971,9 @@ function showSettingsModal() {
   document.getElementById('s-interval').value=S.room?.autoInterval||5;
   document.getElementById('s-lang').value=S.myLang;
   updateTransModeUI();
+  const _isHost = S.room?.creatorId === S.user?.id;
+  const _delSec = document.getElementById('delete-room-section');
+  if (_delSec) _delSec.style.display = _isHost ? 'block' : 'none';
   document.getElementById('overlay-settings').classList.add('show');
 }
 async function saveSettings() {
@@ -2004,6 +2080,158 @@ function whatsappShare(){const url=document.getElementById('share-link-txt').tex
 async function nativeShare(){
   const url=document.getElementById('share-link-txt').textContent;
   if(navigator.share){try{await navigator.share({title:`Accord — ${S.room?.name}`,text:`Join me in "${S.room?.name}" on Accord.`,url});}catch(e){if(e.name!=='AbortError')copyLink();}}else{copyLink();toast('Link copied — share it anywhere!','info',4000);}
+}
+
+
+function buildReactionsHtml(msgId, reactions) {
+  if (!reactions || !Object.keys(reactions).length) return '';
+  const groups = {};
+  Object.entries(reactions).forEach(([uid, emoji]) => { if(!groups[emoji])groups[emoji]=[]; groups[emoji].push(uid); });
+  const pills = Object.entries(groups).map(([emoji,users]) => {
+    const mine = users.includes(S.user?.id);
+    return `<span class="reaction-pill${mine?' mine':''}" onclick="addReaction('${msgId}','${emoji}')" title="${users.length} reaction${users.length>1?'s':''}">${emoji}<span class="reaction-count">${users.length}</span></span>`;
+  }).join('');
+  return `<div class="reactions">${pills}</div>`;
+}
+
+function toggleReactionPicker(msgId, btn) {
+  const picker = document.getElementById('rp-' + msgId);
+  if (!picker) return;
+  const isOpen = picker.classList.contains('open');
+  document.querySelectorAll('.reaction-picker.open').forEach(p => p.classList.remove('open'));
+  if (!isOpen) picker.classList.add('open');
+}
+
+async function addReaction(msgId, emoji) {
+  document.querySelectorAll('.reaction-picker.open').forEach(p => p.classList.remove('open'));
+  if (!S.db || !S.room || !S.user) return;
+  const msg = _msgs.get(msgId);
+  if (!msg) return;
+  const reactions = Object.assign({}, msg.reactions || {});
+  const hadIt = reactions[S.user.id] === emoji;
+  if (hadIt) delete reactions[S.user.id];
+  else reactions[S.user.id] = emoji;
+  _msgs.set(msgId, Object.assign({}, msg, {reactions}));
+  const el = document.getElementById('msg-' + msgId);
+  if (el) {
+    const old = el.querySelector('.reactions');
+    const newHtml = buildReactionsHtml(msgId, reactions);
+    if (old) old.outerHTML = newHtml || '<div class="reactions"></div>';
+    else if (newHtml) el.insertAdjacentHTML('beforeend', newHtml);
+  }
+  const ref = S.db.collection('rooms').doc(S.room.id).collection('messages').doc(msgId);
+  const update = {};
+  update['reactions.' + S.user.id] = hadIt ? firebase.firestore.FieldValue.delete() : emoji;
+  await ref.update(update).catch(()=>{});
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.msg-actions') && !e.target.closest('.reaction-picker')) {
+    document.querySelectorAll('.reaction-picker.open').forEach(p => p.classList.remove('open'));
+  }
+});
+
+let _gifTimer;
+function toggleGifSearch() {
+  const el = document.getElementById('gif-search');
+  if (!el) return;
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    const inp = document.getElementById('gif-inp');
+    if (inp) { inp.focus(); if (!inp.value) searchGifs('reaction'); }
+  }
+}
+
+function searchGifs(q) {
+  clearTimeout(_gifTimer);
+  _gifTimer = setTimeout(async () => {
+    const grid = document.getElementById('gif-grid');
+    if (!grid) return;
+    grid.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3)">Searching...</div>';
+    try {
+      const url = 'https://tenor.googleapis.com/v2/search?q=' + encodeURIComponent(q||'reaction') + '&key=AIzaSyBVB4dNKIWserPmF7R9M6LoNYBk5qvHnpc&limit=12&media_filter=gif';
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.results || !data.results.length) { grid.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3)">No results</div>'; return; }
+      grid.innerHTML = data.results.map(g => {
+        const src = (g.media_formats && (g.media_formats.tinygif || g.media_formats.gif) || {}).url;
+        const desc = g.content_description || 'GIF';
+        return src ? '<div class="gif-item" onclick="sendGif(\'' + src + '\',\'' + desc.replace(/'/g, '') + '\')"><img src="' + src + '" alt="' + desc + '" loading="lazy"></div>' : '';
+      }).join('');
+    } catch(e) { grid.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--danger)">Could not load GIFs</div>'; }
+  }, 400);
+}
+
+async function sendGif(gifUrl, altText) {
+  if (!S.db || !S.room || !S.user) return;
+  document.getElementById('gif-search')?.classList.remove('open');
+  const now = Date.now();
+  await S.db.collection('rooms').doc(S.room.id).collection('messages').add({
+    userId:S.user.id, userName:S.user.name, userColor:S.user.color,
+    userLang:S.myLang, content:'', gifUrl:gifUrl, gifAlt:altText||'GIF',
+    ts:now, timestamp:now, isAI:false,
+  });
+  S.msgsSinceAI++;
+}
+
+
+// ═══ PRIVATE ROOM + APPROVAL ══════════════════════════════════════════
+
+function showPendingScreen(roomId, roomName) {
+  const sub = document.getElementById('pending-subtitle');
+  if (sub) sub.textContent = 'You have requested to join "' + roomName + '". Waiting for host approval.';
+  showScreen('screen-pending');
+  const poll = setInterval(async () => {
+    try {
+      const snap = await S.db.collection('rooms').doc(roomId).collection('presence').doc(S.user.id).get();
+      if (snap.exists && snap.data().status === 'active') {
+        clearInterval(poll);
+        await joinRoomDirect(roomId);
+      }
+    } catch(e) {}
+  }, 5000);
+}
+
+async function approveJoin(userId) {
+  if (!S.db || !S.room) return;
+  const pDoc = await S.db.collection('rooms').doc(S.room.id).collection('pending').doc(userId).get();
+  if (!pDoc.exists) return;
+  const p = pDoc.data();
+  await S.db.collection('rooms').doc(S.room.id).collection('presence').doc(userId).set({
+    name:p.name, color:p.color||'#60a5fa', lang:'en', role:'member', status:'active', lastSeen:Date.now()
+  });
+  await S.db.collection('rooms').doc(S.room.id).collection('pending').doc(userId).delete();
+  toast((p.name||'User') + ' approved', 'ok');
+}
+
+async function denyJoin(userId) {
+  if (!S.db || !S.room) return;
+  await S.db.collection('rooms').doc(S.room.id).collection('pending').doc(userId).delete();
+  toast('Request denied', 'info');
+}
+
+// ═══ DELETE ROOM (host only) ══════════════════════════════════════════
+
+async function confirmDeleteRoom() {
+  if (S.room?.creatorId !== S.user?.id) { toast('Only the host can delete this room', 'err'); return; }
+  const name = S.room?.name || 'this room';
+  if (!confirm('Delete "' + name + '" permanently?\n\nThis erases all messages and data. Cannot be undone.')) return;
+  const typed = prompt('Type the room name to confirm:');
+  if (!typed || typed.trim().toLowerCase() !== name.trim().toLowerCase()) {
+    toast('Room name did not match. Cancelled.', 'err'); return;
+  }
+  try {
+    closeOverlayById('overlay-settings');
+    toast('Deleting...', 'info', 10000);
+    const msgs = await S.db.collection('rooms').doc(S.room.id).collection('messages').get();
+    const b1 = S.db.batch(); msgs.docs.forEach(d => b1.delete(d.ref)); await b1.commit();
+    const pres = await S.db.collection('rooms').doc(S.room.id).collection('presence').get();
+    const b2 = S.db.batch(); pres.docs.forEach(d => b2.delete(d.ref)); await b2.commit();
+    await S.db.collection('rooms').doc(S.room.id).delete();
+    deleteLocalRoom(S.room.id);
+    goRooms();
+    toast('Room deleted.', 'ok');
+  } catch(e) { toast('Delete failed: ' + e.message, 'err', 8000); }
 }
 
 // ═══════════════════════════════════════════════════════
