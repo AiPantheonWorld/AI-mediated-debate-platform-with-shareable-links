@@ -334,14 +334,28 @@ a{color:var(--amber2);text-decoration:none}
     <button class="hdr-btn" onclick="showSettingsModal()" title="Settings">⚙️</button>
     <button class="hdr-btn" onclick="goRooms()" title="Rooms">⬅</button>
   </div>
-  <div class="ai-bar">
+  <div class="ai-bar" style="flex-wrap:wrap;gap:6px 8px">
     <span class="ai-bar-tag">AI</span>
-    <select class="mini-select" id="chat-model-sel" onchange="onModelChange(this.value)"></select>
+    <select class="mini-select" id="chat-model-sel" onchange="onModelChange(this.value)" style="max-width:160px"></select>
+    <select class="mini-select" id="persona-sel" onchange="onPersonaChange(this.value)" style="max-width:120px" title="AI Persona">
+      <option value="default">⚖️ Mediator</option>
+      <option value="couple">💑 Couple</option>
+      <option value="friends">🤝 Friends</option>
+      <option value="professional">💼 Professional</option>
+      <option value="family">👨‍👩‍👧 Family</option>
+      <option value="debate">🧠 Debate</option>
+    </select>
     <div class="auto-wrap">
       <label class="toggle"><input type="checkbox" id="chat-auto-tog" onchange="onAutoToggle(this.checked)"><span class="toggle-track"></span></label>
       <span class="auto-lbl" id="auto-lbl">Auto</span>
     </div>
-    <button class="btn btn-ai" id="ask-btn" onclick="invokeAI()">⚖️ Ask</button>
+    <select class="mini-select" id="ctx-sel" onchange="S.contextWindow=parseInt(this.value)" style="max-width:80px" title="Context window — how many messages AI reads">
+      <option value="8">8 msgs</option>
+      <option value="15" selected>15 msgs</option>
+      <option value="25">25 msgs</option>
+      <option value="40">40 msgs</option>
+    </select>
+    <button class="btn btn-ai" id="ask-btn" onclick="showAskModal()">⚖️ Ask…</button>
   </div>
   <div id="status-bar" style="display:none;padding:7px 14px;font-size:12px;font-weight:500;text-align:center;flex-shrink:0;background:var(--danger-bg);color:var(--danger);border-bottom:1px solid rgba(185,28,28,.2)"></div>
   <div class="msgs" id="msgs"></div>
@@ -397,6 +411,32 @@ a{color:var(--amber2);text-decoration:none}
   <button class="btn btn-ghost btn-full" onclick="closeOverlayById('overlay-share')">Done</button>
 </div></div>
 
+
+<!-- MODAL: ASK AI -->
+<div class="overlay" id="overlay-ask" onclick="closeOverlay('overlay-ask',event)">
+<div class="modal">
+  <h3>Ask Accord</h3>
+  <p class="subtitle">Add a custom focus for this AI review, or just hit Ask to analyse the conversation as-is.</p>
+  <div class="field">
+    <label>Custom question or focus (optional)</label>
+    <textarea id="ask-custom" rows="3" placeholder="e.g. Focus on the unspoken emotional needs here... or: What is the power dynamic at play?"></textarea>
+  </div>
+  <div class="field">
+    <label>Persona</label>
+    <select id="ask-persona">
+      <option value="default">⚖️ Default Mediator</option>
+      <option value="couple">💑 Couple / Romantic</option>
+      <option value="friends">🤝 Friends</option>
+      <option value="professional">💼 Professional</option>
+      <option value="family">👨‍👩‍👧 Family</option>
+      <option value="debate">🧠 Debate / Intellectual</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:18px">
+    <button class="btn btn-primary flex-1" onclick="submitAsk()">⚖️ Ask Now</button>
+    <button class="btn btn-ghost" onclick="closeOverlayById('overlay-ask')">Cancel</button>
+  </div>
+</div></div>
 <!-- MODAL: SETTINGS -->
 <div class="overlay" id="overlay-settings" onclick="closeOverlay('overlay-settings',event)">
 <div class="modal">
@@ -486,6 +526,15 @@ const MODELS = [
   {id:'openai/o3-mini',                               label:'o3-mini',                   group:'🔬 Reasoning'},
   {id:'anthropic/claude-opus-4.6',                    label:'Claude Opus 4.6 ✦',         group:'👑 Premium'},
   {id:'x-ai/grok-3',                                  label:'Grok 3',                    group:'👑 Premium'},
+  // ── NEW — April 2026 ──
+  {id:'openai/gpt-4.1-mini',                          label:'GPT-4.1 Mini',              group:'⚡ Fast'},
+  {id:'google/gemini-2.5-flash-lite',                 label:'Gemini 2.5 Flash Lite',     group:'⚡ Fast'},
+  {id:'stepfun/step-3.5-flash:free',                  label:'Step 3.5 Flash',            group:'🆓 Free'},
+  {id:'qwen/qwen3.6-plus-preview:free',               label:'Qwen3.6 Plus Preview',      group:'🆓 Free'},
+  {id:'deepseek/deepseek-v3.2',                       label:'DeepSeek V3.2 ★',           group:'🧠 Smart'},
+  {id:'minimax/minimax-m2.7',                         label:'MiniMax M2.7',              group:'🧠 Smart'},
+  {id:'x-ai/grok-4.1-fast',                          label:'Grok 4.1 Fast',             group:'🧠 Smart'},
+  {id:'deepseek/deepseek-v3.2-speciale',              label:'DeepSeek V3.2 Speciale',    group:'👑 Premium'},
 ];
 
 const COLORS=['#60a5fa','#f472b6','#34d399','#fb923c','#a78bfa','#38bdf8','#4ade80','#fbbf24','#f87171','#c084fc','#2dd4bf','#e879f9','#86efac','#fdba74','#67e8f9','#fde68a'];
@@ -504,7 +553,15 @@ const LANGUAGES=[
 
 const EMOJI_SET=['😀','😂','🥹','😊','😍','🥰','😘','😭','😤','😩','🤔','😮','😱','🙄','😴','🤗','🤝','👍','👎','❤️','🔥','✨','💯','🎉','🙏','💪','👏','🫶','💀','😅','😆','😁','😄','🥲','😔','😟','😢','😡','🤯','🤩','😎','🥺','🤐','🤫','👋','✋','👌','✌️','🤞','👊','💋','💔','❣️','💕','💖','💘','🫀'];
 
-const SYSTEM_PROMPT = `You are Accord, a wise and empathetic dialogue mediator with deep psychological insight. You help people with different perspectives find understanding and common ground.
+// System prompt provided by PERSONAS[S_persona].prompt via getSystemPrompt()
+
+
+// ── AI PERSONAS ───────────────────────────────────────────────────────
+const PERSONAS = {
+  default: {
+    label: '⚖️ Mediator',
+    color: '#b07d2e',
+    prompt: `You are Accord, a wise and empathetic dialogue mediator with deep psychological insight. You help people with different perspectives find understanding and common ground.
 
 When analysing a conversation:
 1. **Acknowledge** — Reflect each person's core perspective so they feel genuinely heard
@@ -513,7 +570,85 @@ When analysing a conversation:
 4. **Reframe** — Offer a perspective shift that makes the disagreement more navigable
 5. **Invite** — Close with a specific open question that invites forward movement
 
-Voice: warm, measured, psychologically informed. Never take sides. Use **bold** for key insights. Target 200–280 words. Begin directly.`;
+Voice: warm, measured, psychologically informed. Never take sides. Use **bold** for key insights. Target 200–280 words. Begin directly.`
+  },
+  couple: {
+    label: '💑 Couple',
+    color: '#c4325a',
+    prompt: `You are Accord, a compassionate relationship therapist specialising in romantic partnerships. You understand that love languages, attachment styles, and emotional needs shape every conflict.
+
+When analysing this couple's conversation:
+1. **Feel first** — Name the emotions beneath the words before addressing the logic. What is each person *actually* feeling?
+2. **Attachment lens** — Identify anxious/avoidant patterns. Who is reaching out? Who is withdrawing?
+3. **Needs mapping** — What core need (security, appreciation, autonomy, closeness) is going unmet for each person?
+4. **De-escalate** — Gently interrupt blame cycles. Remind both that conflict is *normal* and doesn't mean the relationship is broken
+5. **Reconnect** — Offer a small, concrete act of repair they could do right now
+
+Voice: warm, deeply human, non-judgmental, like a trusted therapist. Acknowledge vulnerability. Use *italics* for emotional insights. Target 200–260 words.`
+  },
+  friends: {
+    label: '🤝 Friends',
+    color: '#7c3aed',
+    prompt: `You are Accord, a wise friend-mediator who understands the unique dynamics of close friendships — the history, the expectations, the unspoken rules.
+
+When analysing this friendship conflict:
+1. **Honour the bond** — Acknowledge what this friendship means and why it's worth working through
+2. **Hear both sides** — Friends often feel betrayed when they feel misunderstood. Make each person feel seen
+3. **Unpack the unsaid** — Long friendships have shorthand and assumptions. What assumption broke down here?
+4. **Lighten where possible** — Friendships are resilient. Remind them of that
+5. **Practical path forward** — Suggest a concrete, low-pressure way to move past this
+
+Voice: warm, direct, like a mutual trusted friend. No clinical language. Keep it real and grounded. Target 180–240 words.`
+  },
+  professional: {
+    label: '💼 Professional',
+    color: '#1d4ed8',
+    prompt: `You are Accord, an executive coach and workplace mediator experienced in navigating professional conflicts, power dynamics, and organisational tensions.
+
+When analysing this professional situation:
+1. **Clarify the business stakes** — What is the practical impact of this disagreement on work outcomes?
+2. **Separate personal from professional** — Help parties distinguish between personal frustration and genuine process disagreement
+3. **Power dynamics** — Acknowledge if there's a hierarchy involved and how that shapes the situation
+4. **Interests vs positions** — Identify what each party *actually needs* (interests) vs what they're asking for (positions)
+5. **Decision framework** — Suggest a clear, fair process for moving to a resolution
+
+Voice: professional, measured, solutions-focused. Avoid emotional language. Use frameworks and clarity. Target 200–260 words.`
+  },
+  family: {
+    label: '👨‍👩‍👧 Family',
+    color: '#15803d',
+    prompt: `You are Accord, a family therapist who understands that family conflicts carry decades of history, role expectations, and deep loyalty bonds.
+
+When analysing this family dynamic:
+1. **Family system view** — Every family member plays a role. Who is the peacekeeper, the challenger, the avoider? How do roles drive this conflict?
+2. **Generational patterns** — Is this conflict echoing something older in the family? Name it gently
+3. **Love in disguise** — Often harsh family words come from deep care. Help translate the love underneath the conflict
+4. **Boundary clarity** — Where are boundaries being crossed or needed?
+5. **Repair ritual** — Family needs ritual and repetition to heal. Suggest something concrete they can do together
+
+Voice: gentle, wise, deeply compassionate. Acknowledge that family wounds run deep. Target 200–270 words.`
+  },
+  debate: {
+    label: '🧠 Debate',
+    color: '#0369a1',
+    prompt: `You are Accord, a rigorous intellectual moderator focused on the quality of arguments, logical clarity, and productive intellectual disagreement.
+
+When analysing this debate:
+1. **Steelman both positions** — Present the *strongest* version of each argument, not the weakest strawman
+2. **Identify the crux** — What is the single most important factual or values disagreement? Name it precisely
+3. **Logical analysis** — Are there fallacies, unsupported assumptions, or missing evidence in either argument?
+4. **Common ground** — What do both parties actually agree on? Start there
+5. **Sharper question** — Reformulate the disagreement as a precise, resolvable question that moves the debate forward
+
+Voice: analytical, rigorous, Socratic. Use **bold** for logical points. Challenge weak reasoning on both sides equally. Target 200–260 words.`
+  }
+};
+
+let S_persona = 'default';
+
+function getSystemPrompt() {
+  return PERSONAS[S_persona]?.prompt || PERSONAS.default.prompt;
+}
 
 // ═══════════════════════════════════════════════════════
 // STATE
@@ -524,7 +659,7 @@ const S = {
   pickedColor:COLORS[0], myLang:'en',
   translateMode:'original', replyTo:null,
   editMode:null, msgsSinceAI:0,
-  thinking:false, subs:[],
+  thinking:false, subs:[], contextWindow:15, minMsgsForAI:6,
 };
 let _summaryLock = false;
 
@@ -643,6 +778,7 @@ function showScreen(id) {
 function goRooms() {
   S.subs.forEach(u=>u()); S.subs=[];
   S.room=null; S.replyTo=null; S.editMode=null;
+  _msgs.clear();
   document.getElementById('msgs').innerHTML='';
   renderRoomsList(); showScreen('screen-rooms');
 }
@@ -798,36 +934,87 @@ async function enterChat() {
 // ═══════════════════════════════════════════════════════
 // LISTENERS
 // ═══════════════════════════════════════════════════════
+// Client-side message store — avoids all orderBy/index/type issues
+const _msgs = new Map(); // id -> msg
+
 function listenMessages() {
+  // NO orderBy — avoids Firestore index requirements and type-mismatch bugs
+  // where Date.now() numbers and Timestamp objects can't be mixed in orderBy queries
   const unsub = S.db.collection('rooms').doc(S.room.id)
-    .collection('messages').orderBy('timestamp','asc')
+    .collection('messages')
     .onSnapshot(snap => {
+      let needsRender = false;
       snap.docChanges().forEach(ch => {
         try {
-          const msg = { id:ch.doc.id, ...ch.doc.data() };
-          if (ch.type==='added') {
-            const el = buildMsgElement(msg);
-            document.getElementById('msgs').appendChild(el);
-            scrollBottom();
-            if (!msg.isAI && msg.userId!==S.user.id) S.msgsSinceAI++;
-          } else if (ch.type==='modified') {
-            const el = document.getElementById('msg-'+msg.id);
-            if (el) {
-              const fresh = buildMsgElement(msg);
-              el.replaceWith(fresh);
-              if (msg.isAI && !msg.pending) scrollBottom();
-            }
+          const msg = { id: ch.doc.id, ...ch.doc.data() };
+          if (ch.type === 'added' || ch.type === 'modified') {
+            const isNew = ch.type === 'added' && !_msgs.has(msg.id);
+            _msgs.set(msg.id, msg);
+            needsRender = true;
+            if (isNew && !msg.isAI && msg.userId !== S.user.id) S.msgsSinceAI++;
+          } else if (ch.type === 'removed') {
+            _msgs.delete(msg.id);
+            needsRender = true;
           }
-        } catch(renderErr) {
-          console.error('Accord render error:', renderErr);
-          toast('Render error: ' + renderErr.message, 'err', 6000);
+        } catch(e) {
+          console.error('Accord snapshot error:', e);
         }
       });
+      if (needsRender) renderAllMessages();
     }, err => {
-      console.error('Accord Firestore listener error:', err);
-      toast('Sync error: ' + err.message + ' — check Firestore rules', 'err', 8000);
+      console.error('Accord Firestore error:', err);
+      toast('Sync error: ' + err.message, 'err', 8000);
     });
   S.subs.push(unsub);
+}
+
+function sortKey(msg) {
+  // Sort by ts (numeric) first, then timestamp (Firestore Timestamp), then id
+  if (msg.ts) return msg.ts;
+  if (msg.timestamp) {
+    if (typeof msg.timestamp === 'number') return msg.timestamp;
+    if (msg.timestamp.toMillis) return msg.timestamp.toMillis();
+  }
+  return 0;
+}
+
+function renderAllMessages() {
+  const wrap = document.getElementById('msgs');
+  if (!wrap) return;
+
+  // Sort all messages client-side
+  const sorted = Array.from(_msgs.values()).sort((a,b) => sortKey(a) - sortKey(b));
+
+  // Efficient diff: only add/update changed elements
+  sorted.forEach(msg => {
+    const existing = document.getElementById('msg-' + msg.id);
+    if (!existing) {
+      // New message — find correct position
+      const el = buildMsgElement(msg);
+      // Insert in sorted position
+      const nextMsg = sorted[sorted.indexOf(msg) + 1];
+      const nextEl = nextMsg ? document.getElementById('msg-' + nextMsg.id) : null;
+      if (nextEl) wrap.insertBefore(el, nextEl);
+      else wrap.appendChild(el);
+    } else if (msg.isAI) {
+      // AI messages can change (pending -> resolved), always re-render
+      const fresh = buildMsgElement(msg);
+      existing.replaceWith(fresh);
+    }
+    // User messages don't change after send, skip re-render unless edited
+    else if (msg.edited) {
+      const fresh = buildMsgElement(msg);
+      existing.replaceWith(fresh);
+    }
+  });
+
+  // Remove deleted messages
+  wrap.querySelectorAll('[id^="msg-"]').forEach(el => {
+    const id = el.id.replace('msg-', '');
+    if (!_msgs.has(id)) el.remove();
+  });
+
+  scrollBottom();
 }
 
 function listenPresence() {
@@ -957,14 +1144,16 @@ async function sendMessage() {
   const inp=document.getElementById('msg-input');
   const content=inp.value.trim(); if(!content||!S.room) return;
   inp.value=''; autoGrow(inp);
-  const msgData={userId:S.user.id,userName:S.user.name,userColor:S.user.color,userLang:S.myLang,content,timestamp:Date.now(),isAI:false};
+  const now = Date.now();
+  const msgData={userId:S.user.id,userName:S.user.name,userColor:S.user.color,
+    userLang:S.myLang,content,ts:now,timestamp:now,isAI:false};
   if (S.replyTo) { msgData.replyTo=S.replyTo; cancelReplyOrEdit(); }
   if (!S.db)  { toast('Not connected to Firebase — reload the page','err',6000); return; }
   if (!S.room){ toast('Not in a room — please rejoin','err',6000); return; }
   try {
     await S.db.collection('rooms').doc(S.room.id).collection('messages').add(msgData);
     S.msgsSinceAI++;
-    if (S.room.autoAI && S.msgsSinceAI>=(S.room.autoInterval||5)) { S.msgsSinceAI=0; setTimeout(()=>invokeAI(),900); }
+    if (S.room.autoAI && shouldAutoTriggerAI()) { S.msgsSinceAI=0; setTimeout(()=>invokeAI(),900); }
     // Non-critical updates — don't block or throw
     S.db.collection('rooms').doc(S.room.id).update({msgCount:firebase.firestore.FieldValue.increment(1)}).catch(()=>{});
     S.db.collection('rooms').doc(S.room.id).get().then(snap=>{if((snap.data()?.msgCount||0)%20===0)updateSummary();}).catch(()=>{});
@@ -1026,6 +1215,24 @@ function toggleEmojiPicker(){document.getElementById('emoji-picker').classList.t
 function insertEmoji(e){const inp=document.getElementById('msg-input');const p=inp.selectionStart;inp.value=inp.value.slice(0,p)+e+inp.value.slice(p);inp.selectionStart=inp.selectionEnd=p+e.length;inp.focus();autoGrow(inp);}
 document.addEventListener('click',e=>{const picker=document.getElementById('emoji-picker');if(picker&&!picker.contains(e.target)&&!e.target.closest('.emoji-btn'))picker.classList.remove('open');});
 
+
+// ── INTELLIGENT AI TRIGGER ────────────────────────────────────────────
+function shouldAutoTriggerAI() {
+  // Check interval threshold
+  if (S.msgsSinceAI < (S.room.autoInterval || 5)) return false;
+
+  // Check minimum message count in room — don't trigger on just a few hellos
+  const msgs = Array.from(_msgs.values()).filter(m => !m.isAI && !m.pending);
+  if (msgs.length < S.minMsgsForAI) return false;
+
+  // Check substance: at least some messages should be meaningful (>15 chars avg)
+  const recent = msgs.slice(-8);
+  const avgLen = recent.reduce((sum, m) => sum + (m.content||'').length, 0) / Math.max(recent.length, 1);
+  if (avgLen < 15) return false;
+
+  return true;
+}
+
 // ═══════════════════════════════════════════════════════
 // AI — with distributed lock + in-place placeholder
 // ═══════════════════════════════════════════════════════
@@ -1053,24 +1260,29 @@ async function invokeAI(customPrompt=null) {
   // Create placeholder in Firestore — appears in correct position immediately
   let placeholderRef=null;
   try {
+    const _now = Date.now();
     placeholderRef=await roomRef.collection('messages').add({
       isAI:true,pending:true,content:'',userId:'AI',userName:'Accord',userColor:'#b07d2e',
-      timestamp:Date.now(),
+      ts:_now,timestamp:_now,
     });
   } catch(e){}
 
   try {
     const roomSnap=await roomRef.get(); const summary=roomSnap.data().summary||'';
-    const msgsSnap=await roomRef.collection('messages').orderBy('timestamp','desc').limit(15).get();
-    const recent=msgsSnap.docs.reverse().map(d=>d.data());
+    // Use client-side message store — no Firestore query needed, already in memory
+    const allMsgs = Array.from(_msgs.values())
+      .filter(m => !m.pending)
+      .sort((a,b) => sortKey(a) - sortKey(b));
+    const limit = S.contextWindow || 15;
+    const recent = allMsgs.slice(-limit);
     const convoText=recent.map(m=>m.isAI?`[Accord]: ${m.content}`:`${m.userName}: ${m.content}`).join('\n\n');
-    const contextMsg=summary?`[Summary so far]: ${summary}\n\n[Recent]:\n\n${convoText}`:`[Conversation]:\n\n${convoText}`;
+    const contextMsg=summary?`[Summary so far]: ${summary}\n\n[Recent ${limit} messages]:\n\n${convoText}`:`[Conversation]:\n\n${convoText}`;
     const model=document.getElementById('chat-model-sel').value||MODELS[0].id;
 
     const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json','HTTP-Referer':location.href,'X-Title':'Accord - AI Dialogue'},
-      body:JSON.stringify({model,max_tokens:600,messages:[{role:'system',content:SYSTEM_PROMPT},{role:'user',content:customPrompt||`${contextMsg}\n\nPlease analyse and mediate.`}]}),
+      body:JSON.stringify({model,max_tokens:600,messages:[{role:'system',content:getSystemPrompt()},{role:'user',content:customPrompt||`${contextMsg}\n\nPlease analyse and mediate.`}]}),
     });
     if(!res.ok){const err=await res.text();throw new Error(`HTTP ${res.status}: ${err.substring(0,200)}`);}
     const data=await res.json();
@@ -1079,7 +1291,7 @@ async function invokeAI(customPrompt=null) {
     if(!text) throw new Error('Empty response from AI');
 
     if(placeholderRef) {
-      await placeholderRef.update({pending:false,content:text,aiModel:data.model||model,resolvedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      await placeholderRef.update({pending:false,content:text,aiModel:data.model||model});
     } else {
       await roomRef.collection('messages').add({isAI:true,pending:false,content:text,userId:'AI',userName:'Accord',userColor:'#b07d2e',timestamp:Date.now(),aiModel:data.model||model});
     }
@@ -1100,7 +1312,7 @@ async function updateSummary() {
   if(_summaryLock) return; const key=S.room?.orKey; if(!key) return;
   _summaryLock=true; const pill=document.getElementById('summary-pill'); if(pill) pill.classList.add('visible');
   try {
-    const snap=await S.db.collection('rooms').doc(S.room.id).collection('messages').orderBy('timestamp','asc').limit(60).get();
+    const snap=await S.db.collection('rooms').doc(S.room.id).collection('messages').orderBy('ts','asc').limit(60).get();
     const convo=snap.docs.map(d=>d.data()).map(m=>m.isAI?`[Accord]: ${m.content}`:`${m.userName}: ${m.content}`).join('\n\n');
     const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
