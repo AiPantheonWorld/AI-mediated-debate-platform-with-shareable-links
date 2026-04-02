@@ -1027,9 +1027,9 @@ let _summaryLock = false;
 window.addEventListener('load', () => {
   if (typeof firebase === 'undefined') {
     const errDiv = document.createElement('div');
-    errDiv.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:sans-serif;color:#1a1410;background:#f5f0e8;padding:24px;text-align:center;z-index:9999';
-    errDiv.innerHTML = '<div style="font-size:36px">⚠️</div><div style="font-size:18px;font-weight:600">Firebase failed to load</div><div style="font-size:14px;color:#5c5044;max-width:300px;line-height:1.6">This app needs an internet connection to load. Check your connection and reload.</div><button onclick="location.reload()" style="padding:10px 24px;background:#9a6f1e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">&#8635; Reload</button>';
-    document.body.appendChild(errDiv);align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:14px;font-family:sans-serif;color:#1c1714;background:#f0ebe2;padding:24px;text-align:center"><div style="font-size:36px">⚠️</div><div style="font-size:18px;font-weight:600">Firebase failed to load</div><div style="font-size:14px;color:#6b5f52;max-width:300px;line-height:1.6">Check your internet connection and reload.</div><button onclick="location.reload()" style="padding:10px 24px;background:#b07d2e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">↺ Reload</button></div>';
+    errDiv.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:sans-serif;padding:24px;text-align:center;z-index:9999;background:var(--bg,#f5f0e8)';
+    errDiv.innerHTML = '<div style="font-size:36px">&#x26A0;&#xFE0F;</div><div style="font-size:18px;font-weight:600;margin-bottom:8px">Connecting to Firebase...</div><div style="font-size:13px;max-width:280px;line-height:1.6;margin-bottom:16px">If this persists, check your internet connection.</div><button onclick="location.reload()" style="padding:10px 24px;background:#9a6f1e;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">Reload</button>';
+    document.body.appendChild(errDiv);
     return;
   }
 
@@ -1769,9 +1769,7 @@ async function submitAsk() {
     .filter(m => !m.pending && !m.isAI)
     .sort((a,b) => sortKey(a) - sortKey(b));
   if (allMsgs.length < 1) { toast('Need at least one message to analyse', 'info', 3000); return; }
-  const convoText = allMsgs.map(m => `${m.userName}: ${m.content}`).join('
-
-');
+  const convoText = allMsgs.map(m => `${m.userName}: ${m.content}`).join('\n\n');
   invokeAI(custom ? `${convoText}
 
 Specific focus: ${custom}` : null);
