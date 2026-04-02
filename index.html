@@ -688,6 +688,8 @@ a{color:var(--accent);text-decoration:none}
     <span class="chat-logo">⚖️</span>
     <span class="room-name-pill" id="room-name-pill">Room</span>
     <div class="hdr-spacer"></div>
+    <button class="hdr-btn" onclick="showProfileModal()" title="My Profile">👤</button>
+    <button class="hdr-btn" onclick="showRoomContextModal()" title="Room Context">🗒️</button>
     <button class="hdr-btn" onclick="toggleParticipants()" title="Participants" id="part-btn">👥<span class="badge-count" id="part-count">0</span></button>
     <button class="hdr-btn" onclick="showShareModal()" title="Invite">🔗</button>
     <button class="hdr-btn" onclick="showThemeModal()" title="Theme">🎨</button>
@@ -798,6 +800,53 @@ a{color:var(--accent);text-decoration:none}
     <button class="btn btn-primary flex-1" id="ask-now-btn" onclick="submitAsk()">⚖️ Ask Now</button>
     <button class="btn btn-ghost" onclick="closeOverlayById('overlay-ask')">Cancel</button>
   </div>
+</div></div>
+
+<!-- MODAL: MY PROFILE -->
+<div class="overlay" id="overlay-profile" onclick="closeOverlay('overlay-profile',event)">
+<div class="modal">
+  <h3>My Profile</h3>
+  <p class="subtitle">Helps Accord understand you. Visible to other participants.</p>
+  <div class="field"><label>About me</label>
+    <input type="text" id="p-bio" placeholder="e.g. I tend to go quiet when I feel unheard" maxlength="120"></div>
+  <div class="field"><label>My communication style</label>
+    <select id="p-style">
+      <option value="">Not specified</option>
+      <option value="direct">Direct — I say what I mean</option>
+      <option value="emotional">Emotional — I lead with feelings</option>
+      <option value="analytical">Analytical — I focus on facts and logic</option>
+      <option value="avoidant">Avoidant — I tend to withdraw in conflict</option>
+      <option value="people-pleaser">People-pleaser — I find it hard to disagree</option>
+      <option value="assertive">Assertive — I stand my ground calmly</option>
+    </select></div>
+  <div class="field"><label>Anything Accord should know right now?</label>
+    <textarea id="p-context" rows="2" placeholder="e.g. I am going through a stressful period. I have been trying to communicate more openly." maxlength="200"></textarea></div>
+  <button class="btn btn-primary btn-full mt18" onclick="saveProfile()">Save Profile</button>
+  <button class="btn btn-ghost btn-full mt8" onclick="closeOverlayById('overlay-profile')">Cancel</button>
+</div></div>
+
+<!-- MODAL: ROOM CONTEXT -->
+<div class="overlay" id="overlay-roomctx" onclick="closeOverlay('overlay-roomctx',event)">
+<div class="modal">
+  <h3>Room Context</h3>
+  <p class="subtitle">Background about this conversation — fed to Accord so its responses are much more tailored.</p>
+  <div class="field"><label>Relationship type</label>
+    <select id="rc-type">
+      <option value="">Not specified</option>
+      <option value="romantic">Romantic / Couple</option>
+      <option value="friends">Close friends</option>
+      <option value="family">Family</option>
+      <option value="colleagues">Colleagues / Professional</option>
+      <option value="acquaintances">Acquaintances</option>
+    </select></div>
+  <div class="field"><label>Background of this conversation</label>
+    <textarea id="rc-background" rows="3" placeholder="e.g. V and N have been together for 2 years. They have a recurring argument about communication during stressful periods." maxlength="400"></textarea></div>
+  <div class="field"><label>Goal of this session</label>
+    <textarea id="rc-goal" rows="2" placeholder="e.g. Find a way to de-escalate more quickly when one of us shuts down." maxlength="200"></textarea></div>
+  <div class="field"><label>Notes about participants (optional)</label>
+    <textarea id="rc-notes" rows="2" placeholder="e.g. V tends to get defensive. N tends to over-explain." maxlength="300"></textarea></div>
+  <button class="btn btn-primary btn-full mt18" onclick="saveRoomContext()">Save Context</button>
+  <button class="btn btn-ghost btn-full mt8" onclick="closeOverlayById('overlay-roomctx')">Cancel</button>
 </div></div>
 <!-- MODAL: SETTINGS -->
 <div class="overlay" id="overlay-settings" onclick="closeOverlay('overlay-settings',event)">
@@ -931,7 +980,7 @@ When analysing a conversation:
 4. **Reframe** — Offer a perspective shift that makes the disagreement more navigable
 5. **Invite** — Close with a specific open question that invites forward movement
 
-Voice: warm, measured, psychologically informed. Never take sides. Use **bold** for key insights. Target 200–280 words. Begin directly.`
+Voice: warm, measured, psychologically informed. Never take sides. Use **bold** for key insights. Target 130–160 words. Be concise. Begin directly.`
   },
   couple: {
     label: '💑 Couple',
@@ -945,7 +994,7 @@ When analysing this couple's conversation:
 4. **De-escalate** — Gently interrupt blame cycles. Remind both that conflict is *normal* and doesn't mean the relationship is broken
 5. **Reconnect** — Offer a small, concrete act of repair they could do right now
 
-Voice: warm, deeply human, non-judgmental, like a trusted therapist. Acknowledge vulnerability. Use *italics* for emotional insights. Target 200–260 words.`
+Voice: warm, deeply human, non-judgmental, like a trusted therapist. Acknowledge vulnerability. Use *italics* for emotional insights. Target 130–150 words.`
   },
   friends: {
     label: '🤝 Friends',
@@ -959,7 +1008,7 @@ When analysing this friendship conflict:
 4. **Lighten where possible** — Friendships are resilient. Remind them of that
 5. **Practical path forward** — Suggest a concrete, low-pressure way to move past this
 
-Voice: warm, direct, like a mutual trusted friend. No clinical language. Keep it real and grounded. Target 180–240 words.`
+Voice: warm, direct, like a mutual trusted friend. No clinical language. Keep it real and grounded. Target 110–140 words.`
   },
   professional: {
     label: '💼 Professional',
@@ -973,7 +1022,7 @@ When analysing this professional situation:
 4. **Interests vs positions** — Identify what each party *actually needs* (interests) vs what they're asking for (positions)
 5. **Decision framework** — Suggest a clear, fair process for moving to a resolution
 
-Voice: professional, measured, solutions-focused. Avoid emotional language. Use frameworks and clarity. Target 200–260 words.`
+Voice: professional, measured, solutions-focused. Avoid emotional language. Use frameworks and clarity. Target 130–150 words.`
   },
   family: {
     label: '👨‍👩‍👧 Family',
@@ -987,7 +1036,7 @@ When analysing this family dynamic:
 4. **Boundary clarity** — Where are boundaries being crossed or needed?
 5. **Repair ritual** — Family needs ritual and repetition to heal. Suggest something concrete they can do together
 
-Voice: gentle, wise, deeply compassionate. Acknowledge that family wounds run deep. Target 200–270 words.`
+Voice: gentle, wise, deeply compassionate. Acknowledge that family wounds run deep. Target 130–150 words.`
   },
   debate: {
     label: '🧠 Debate',
@@ -1001,7 +1050,7 @@ When analysing this debate:
 4. **Common ground** — What do both parties actually agree on? Start there
 5. **Sharper question** — Reformulate the disagreement as a precise, resolvable question that moves the debate forward
 
-Voice: analytical, rigorous, Socratic. Use **bold** for logical points. Challenge weak reasoning on both sides equally. Target 200–260 words.`
+Voice: analytical, rigorous, Socratic. Use **bold** for logical points. Challenge weak reasoning on both sides equally. Target 130–150 words.`
   }
 };
 
@@ -1021,6 +1070,7 @@ const S = {
   translateMode:'original', replyTo:null,
   editMode:null, msgsSinceAI:0,
   thinking:false, subs:[], contextWindow:15, minMsgsForAI:6,
+  myProfile:{bio:'',style:'',context:''},
 };
 let _summaryLock = false;
 
@@ -1292,6 +1342,9 @@ async function enterChat() {
   document.getElementById('auto-lbl').textContent = S.room.autoAI?'Auto: On':'Auto';
   updateTransModeUI();
   listenMessages(); listenPresence(); listenRoom();
+  // Sync saved profile to presence
+  const _sp = localStorage.getItem('accord_profile');
+  if (_sp) { try { S.myProfile=JSON.parse(_sp); S.db.collection('rooms').doc(S.room.id).collection('presence').doc(S.user.id).update({profile:S.myProfile}).catch(()=>{}); } catch(e){} }
   setTimeout(()=>document.getElementById('msg-input').focus(), 400);
 }
 
@@ -1488,7 +1541,8 @@ function renderParticipantsPanel(members) {
       <div class="member-av" style="background:${m.color||'#60a5fa'};color:${contrastColor(m.color||'#60a5fa')}">${init}</div>
       <div class="member-info">
         <div class="member-name">${esc(m.name)}${isMe?' <span style="font-size:10px;opacity:.5">(you)</span>':''}</div>
-        <div class="member-lang">${langLabel}</div>
+        <div class="member-lang">${langLabel}${m.profile?.style ? ' · ' + m.profile.style : ''}</div>
+        ${m.profile?.bio ? `<div style="font-size:11px;color:var(--text3);margin-top:2px;font-style:italic;white-space:normal">${esc(m.profile.bio)}</div>` : ''}
       </div>
       <div class="member-right">
         <span class="member-role ${m.role==='host'?'role-host':'role-member'}">${m.role==='host'?'★ Host':'Member'}</span>
@@ -1609,6 +1663,91 @@ function shouldAutoTriggerAI() {
   return true;
 }
 
+
+// ═══ USER PROFILES + ROOM CONTEXT ═══════════════════════════════════════
+
+function showProfileModal() {
+  const saved = JSON.parse(localStorage.getItem('accord_profile') || '{}');
+  document.getElementById('p-bio').value = saved.bio || '';
+  document.getElementById('p-style').value = saved.style || '';
+  document.getElementById('p-context').value = saved.context || '';
+  document.getElementById('overlay-profile').classList.add('show');
+}
+
+async function saveProfile() {
+  const profile = {
+    bio:     document.getElementById('p-bio').value.trim(),
+    style:   document.getElementById('p-style').value,
+    context: document.getElementById('p-context').value.trim(),
+  };
+  localStorage.setItem('accord_profile', JSON.stringify(profile));
+  S.myProfile = profile;
+  if (S.db && S.room && S.user) {
+    await S.db.collection('rooms').doc(S.room.id)
+      .collection('presence').doc(S.user.id)
+      .update({ profile }).catch(()=>{});
+  }
+  closeOverlayById('overlay-profile');
+  toast('Profile saved', 'ok');
+}
+
+function showRoomContextModal() {
+  const d = S.room?.roomContext || {};
+  document.getElementById('rc-type').value = d.type || '';
+  document.getElementById('rc-background').value = d.background || '';
+  document.getElementById('rc-goal').value = d.goal || '';
+  document.getElementById('rc-notes').value = d.notes || '';
+  document.getElementById('overlay-roomctx').classList.add('show');
+}
+
+async function saveRoomContext() {
+  const ctx = {
+    type:       document.getElementById('rc-type').value,
+    background: document.getElementById('rc-background').value.trim(),
+    goal:       document.getElementById('rc-goal').value.trim(),
+    notes:      document.getElementById('rc-notes').value.trim(),
+  };
+  if (S.room) S.room.roomContext = ctx;
+  if (S.db && S.room) {
+    await S.db.collection('rooms').doc(S.room.id)
+      .update({ roomContext: ctx }).catch(()=>{});
+  }
+  closeOverlayById('overlay-roomctx');
+  toast('Room context saved', 'ok');
+}
+
+async function buildUserContext() {
+  const lines = [];
+  const ctx = S.room?.roomContext;
+  if (ctx) {
+    if (ctx.type)       lines.push('Relationship: ' + ctx.type);
+    if (ctx.background) lines.push('Background: ' + ctx.background);
+    if (ctx.goal)       lines.push('Session goal: ' + ctx.goal);
+    if (ctx.notes)      lines.push('Participant notes: ' + ctx.notes);
+  }
+  if (S.db && S.room) {
+    try {
+      const snap = await S.db.collection('rooms').doc(S.room.id).collection('presence').get();
+      const profiles = snap.docs
+        .map(d => ({name: d.data().name, p: d.data().profile}))
+        .filter(x => x.p && (x.p.bio || x.p.style || x.p.context));
+      if (profiles.length) {
+        lines.push('');
+        lines.push('Participant profiles:');
+        profiles.forEach(x => {
+          const parts = [];
+          if (x.p.bio)     parts.push(x.p.bio);
+          if (x.p.style)   parts.push('style: ' + x.p.style);
+          if (x.p.context) parts.push(x.p.context);
+          lines.push('  ' + x.name + ': ' + parts.join('. '));
+        });
+      }
+    } catch(e) {}
+  }
+  if (!lines.length) return '';
+  return '[Context]:\n' + lines.join('\n');
+}
+
 // ═══════════════════════════════════════════════════════
 // AI — with distributed lock + in-place placeholder
 // ═══════════════════════════════════════════════════════
@@ -1644,7 +1783,10 @@ async function invokeAI(customPrompt=null) {
   } catch(e){}
 
   try {
-    const roomSnap=await roomRef.get(); const summary=roomSnap.data().summary||'';
+    const roomSnap=await roomRef.get();
+    const roomData=roomSnap.data();
+    const summary=roomData.summary||'';
+    if(roomData.roomContext) S.room.roomContext=roomData.roomContext;
     // Use client-side message store — no Firestore query needed, already in memory
     const allMsgs = Array.from(_msgs.values())
       .filter(m => !m.pending)
@@ -1652,13 +1794,15 @@ async function invokeAI(customPrompt=null) {
     const limit = S.contextWindow || 15;
     const recent = allMsgs.slice(-limit);
     const convoText=recent.map(m=>m.isAI?`[Accord]: ${m.content}`:`${m.userName}: ${m.content}`).join('\n\n');
-    const contextMsg=summary?`[Summary so far]: ${summary}\n\n[Recent ${limit} messages]:\n\n${convoText}`:`[Conversation]:\n\n${convoText}`;
+    const baseContext=summary?`[Summary so far]: ${summary}\n\n[Recent ${limit} messages]:\n\n${convoText}`:`[Conversation]:\n\n${convoText}`;
+    const userCtx = await buildUserContext();
+    const contextMsg = userCtx ? userCtx + '\n\n' + baseContext : baseContext;
     const model=document.getElementById('chat-model-sel').value||MODELS[0].id;
 
     const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',
       headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json','HTTP-Referer':location.href,'X-Title':'Accord - AI Dialogue'},
-      body:JSON.stringify({model,max_tokens:600,messages:[{role:'system',content:getSystemPrompt()},{role:'user',content:customPrompt||`${contextMsg}\n\nPlease analyse and mediate.`}]}),
+      body:JSON.stringify({model,max_tokens:380,messages:[{role:'system',content:getSystemPrompt()},{role:'user',content:customPrompt||`${contextMsg}\n\nPlease analyse and mediate.`}]}),
     });
     if(!res.ok){const err=await res.text();throw new Error(`HTTP ${res.status}: ${err.substring(0,200)}`);}
     const data=await res.json();
@@ -1685,21 +1829,45 @@ async function invokeAI(customPrompt=null) {
 // SUMMARY (memory)
 // ═══════════════════════════════════════════════════════
 async function updateSummary() {
-  if(_summaryLock) return; const key=S.room?.orKey; if(!key) return;
-  _summaryLock=true; const pill=document.getElementById('summary-pill'); if(pill) pill.classList.add('visible');
+  if (_summaryLock) return;
+  const key = S.room?.orKey; if (!key) return;
+  _summaryLock = true;
+  const pill = document.getElementById('summary-pill');
+  if (pill) pill.classList.add('visible');
   try {
-    const snap=await S.db.collection('rooms').doc(S.room.id).collection('messages').orderBy('ts','asc').limit(60).get();
-    const convo=snap.docs.map(d=>d.data()).map(m=>m.isAI?`[Accord]: ${m.content}`:`${m.userName}: ${m.content}`).join('\n\n');
-    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
-      method:'POST',
-      headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json','HTTP-Referer':location.href},
-      body:JSON.stringify({model:'openrouter/free',max_tokens:200,messages:[{role:'user',content:`Summarise this conversation in 3-4 sentences, capturing the main topic, each person's position, and any progress.\n\n${convo}`}]}),
+    const msgs = Array.from(_msgs.values())
+      .filter(m => !m.isAI && !m.pending && m.content)
+      .sort((a,b) => sortKey(a)-sortKey(b))
+      .slice(-40);
+    if (msgs.length < 5) return;
+    const lines = msgs.map(m => m.userName + ': ' + m.content).join('\n');
+    const prompt = 'Summarise this chat in 2-3 sentences. State who is involved, the core tension, and any progress. Be brief and factual.\n\n' + lines;
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': location.href, 'X-Title': 'Accord - AI Dialogue'},
+      body: JSON.stringify({model:'google/gemini-2.5-flash', max_tokens:150, messages:[{role:'user',content:prompt}]}),
     });
-    const data=await res.json();
-    const summary=data.choices?.[0]?.message?.content;
-    if(summary) await S.db.collection('rooms').doc(S.room.id).update({summary});
-  } catch(e){}
-  finally { _summaryLock=false; const p=document.getElementById('summary-pill'); if(p) p.classList.remove('visible'); }
+    const data = await res.json();
+    const summary = (data.choices?.[0]?.message?.content || '').trim();
+    // Validate: reject garbage (repetition loops like aaaaa...)
+    let isGarbage = !summary || summary.length < 15;
+    if (!isGarbage) {
+      // Check for char repetition runs > 7
+      let run = 1;
+      for (let ci = 1; ci < summary.length; ci++) {
+        if (summary[ci] === summary[ci-1]) { run++; if (run > 7) { isGarbage = true; break; } }
+        else run = 1;
+      }
+    }
+    if (!isGarbage) {
+      await S.db.collection('rooms').doc(S.room.id).update({summary});
+    }
+  } catch(e) {}
+  finally {
+    _summaryLock = false;
+    const p = document.getElementById('summary-pill');
+    if (p) p.classList.remove('visible');
+  }
 }
 
 // ═══════════════════════════════════════════════════════
