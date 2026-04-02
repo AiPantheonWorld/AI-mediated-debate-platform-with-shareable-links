@@ -443,7 +443,7 @@ a{color:var(--accent);text-decoration:none}
   border:1px solid var(--border);padding:2px 8px;border-radius:20px;
   margin-left:auto;
 }
-.thinking-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--accent);font-weight:500}
+.thinking-row,.thinking-inner{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--accent);font-weight:500}
 .dots{display:flex;gap:5px}
 .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:blink 1.4s ease-in-out infinite}
 .dot:nth-child(2){animation-delay:.2s}
@@ -873,7 +873,6 @@ const MODELS = [
   {id:'minimax/minimax-m2.5:free',                     label:'MiniMax M2.5',                group:'🆓 Free'},
   {id:'nvidia/llama-3.3-nemotron-super-49b-v1:free',   label:'Nemotron Super 49B',          group:'🆓 Free'},
   // ─── FAST / CHEAP ────────────────────────────────────────────────────
-  {id:'openai/gpt-4.1-mini',                           label:'GPT-4.1 Mini',                group:'⚡ Fast'},
   {id:'anthropic/claude-haiku-4.5',                    label:'Claude Haiku 4.5',            group:'⚡ Fast'},
   {id:'google/gemini-2.5-flash',                       label:'Gemini 2.5 Flash',            group:'⚡ Fast'},
   {id:'google/gemini-2.5-flash-lite',                  label:'Gemini 2.5 Flash Lite',       group:'⚡ Fast'},
@@ -1027,7 +1026,10 @@ let _summaryLock = false;
 // ═══════════════════════════════════════════════════════
 window.addEventListener('load', () => {
   if (typeof firebase === 'undefined') {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:14px;font-family:sans-serif;color:#1c1714;background:#f0ebe2;padding:24px;text-align:center"><div style="font-size:36px">⚠️</div><div style="font-size:18px;font-weight:600">Firebase failed to load</div><div style="font-size:14px;color:#6b5f52;max-width:300px;line-height:1.6">Check your internet connection and reload.</div><button onclick="location.reload()" style="padding:10px 24px;background:#b07d2e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">↺ Reload</button></div>';
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:sans-serif;color:#1a1410;background:#f5f0e8;padding:24px;text-align:center;z-index:9999';
+    errDiv.innerHTML = '<div style="font-size:36px">⚠️</div><div style="font-size:18px;font-weight:600">Firebase failed to load</div><div style="font-size:14px;color:#5c5044;max-width:300px;line-height:1.6">This app needs an internet connection to load. Check your connection and reload.</div><button onclick="location.reload()" style="padding:10px 24px;background:#9a6f1e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">&#8635; Reload</button>';
+    document.body.appendChild(errDiv);align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:14px;font-family:sans-serif;color:#1c1714;background:#f0ebe2;padding:24px;text-align:center"><div style="font-size:36px">⚠️</div><div style="font-size:18px;font-weight:600">Firebase failed to load</div><div style="font-size:14px;color:#6b5f52;max-width:300px;line-height:1.6">Check your internet connection and reload.</div><button onclick="location.reload()" style="padding:10px 24px;background:#b07d2e;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer">↺ Reload</button></div>';
     return;
   }
 
@@ -1423,7 +1425,7 @@ function buildMsgElement(msg) {
       el.innerHTML=`<div class="thinking-inner"><div class="ai-av">⚖️</div><span>Accord is thinking</span><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
     } else {
       el.className='msg-ai';
-      const persona = PERSONAS[msg.persona||'default']||PERSONAS.default;
+      const persona = (typeof PERSONAS !== 'undefined' && PERSONAS[msg.persona||'default']) || (typeof PERSONAS !== 'undefined' && PERSONAS.default) || {label:'⚖️ Mediator'};
       el.innerHTML=`<div class="ai-hdr">
         <div class="ai-av">${persona.label.split(' ')[0]||'⚖️'}</div>
         <span class="ai-name">Accord</span>
