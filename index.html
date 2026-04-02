@@ -408,8 +408,9 @@ a{color:var(--accent);text-decoration:none}
   padding:18px 20px;margin:12px 0;
   animation:msgIn .25s ease;
   box-shadow:var(--sh2);
-  position:relative;overflow:hidden;
+  position:relative;
 }
+
 /* Gradient top accent bar */
 .msg-ai::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
@@ -450,7 +451,7 @@ a{color:var(--accent);text-decoration:none}
 .dot:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.2;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
 
-.ai-body{font-size:14px;line-height:1.78;color:var(--text)}
+.ai-body{font-size:14px;line-height:1.78;color:var(--text);display:block;width:100%;word-wrap:break-word;}
 .ai-body p{margin-bottom:10px}
 .ai-body p:last-child{margin-bottom:0}
 .ai-body strong{color:var(--accent);font-weight:600}
@@ -715,7 +716,7 @@ a{color:var(--accent);text-decoration:none}
       <option value="25">25 msgs</option>
       <option value="40">40 msgs</option>
     </select>
-    <button class="btn btn-ai" id="ask-btn" onclick="showAskModal()">⚖️ Ask…</button>
+    <button class="btn btn-ai" id="ask-btn" onclick="handleAskClick()">⚖️ Ask</button>
   </div>
   <div id="status-bar" style="display:none;padding:7px 14px;font-size:12px;font-weight:500;text-align:center;flex-shrink:0;background:var(--danger-bg);color:var(--danger);border-bottom:1px solid rgba(185,28,28,.2)"></div>
   <div class="msgs" id="msgs"></div>
@@ -776,7 +777,7 @@ a{color:var(--accent);text-decoration:none}
 <div class="overlay" id="overlay-ask" onclick="closeOverlay('overlay-ask',event)">
 <div class="modal">
   <h3>Ask Accord</h3>
-  <p class="subtitle">Add a custom focus for this AI review, or just hit Ask to analyse the conversation as-is.</p>
+  <p class="subtitle">Choose a persona and optionally write custom instructions for Accord.</p>
   <div class="field">
     <label>Choose Persona</label>
     <select id="ask-persona" onchange="updateAskModalUI(this.value)">
@@ -1428,13 +1429,18 @@ function buildMsgElement(msg) {
       el.innerHTML=`<div class="thinking-inner"><div class="ai-av">⚖️</div><span>Accord is thinking</span><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
     } else {
       el.className='msg-ai';
-      const persona = (typeof PERSONAS !== 'undefined' && PERSONAS[msg.persona||'default']) || (typeof PERSONAS !== 'undefined' && PERSONAS.default) || {label:'⚖️ Mediator'};
-      el.innerHTML=`<div class="ai-hdr">
-        <div class="ai-av">${persona.label.split(' ')[0]||'⚖️'}</div>
-        <span class="ai-name">Accord</span>
-        <span class="ai-persona-tag">${persona.label}</span>
-        <span class="ai-model-tag">${cleanModelLabel(msg.aiModel||'')}</span>
-      </div><div class="ai-body">${mdToHtml(msg.content)}</div>`;
+      const persona = (typeof PERSONAS!=='undefined'&&PERSONAS[msg.persona||'default'])||PERSONAS.default||{label:'⚖️ Mediator'};
+      const icon = persona.label ? persona.label.split(' ')[0] : '⚖️';
+      // Build header
+      const hdr = document.createElement('div');
+      hdr.className = 'ai-hdr';
+      hdr.innerHTML = `<div class="ai-av">${icon}</div><span class="ai-name">Accord</span><span class="ai-persona-tag">${esc(persona.label||'')}</span><span class="ai-model-tag">${esc(cleanModelLabel(msg.aiModel||''))}</span>`;
+      // Build body — use textContent-safe approach
+      const body = document.createElement('div');
+      body.className = 'ai-body';
+      body.innerHTML = mdToHtml(msg.content||'');
+      el.appendChild(hdr);
+      el.appendChild(body);
     }
     return el;
   }
