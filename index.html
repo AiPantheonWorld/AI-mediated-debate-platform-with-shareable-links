@@ -699,7 +699,7 @@ a{color:var(--accent);text-decoration:none}
   </div>
   <div class="field mt12" id="interval-field">
     <label>AI speaks after every…</label>
-    <select id="inp-interval"><option value="3">3 messages</option><option value="5">5 messages</option><option value="8">8 messages</option><option value="15">15 messages</option></select>
+    <select id="inp-interval"><option value="3">3 messages</option><option value="5">5 messages</option><option value="8">8 messages</option><option value="15">15 messages</option><option value="25" selected>25 messages (default)</option><option value="50">50 messages</option></select>
   </div>
   <div class="toggle-row" style="margin-bottom:4px">
     <div class="toggle-info"><div class="tl">Private Room</div><div class="td">New joiners need host approval before they can chat</div></div>
@@ -749,7 +749,7 @@ a{color:var(--accent);text-decoration:none}
   </div>
   <div id="status-bar" style="display:none;padding:7px 14px;font-size:12px;font-weight:500;text-align:center;flex-shrink:0;background:var(--danger-bg);color:var(--danger);border-bottom:1px solid rgba(185,28,28,.2)"></div>
   <div class="msgs" id="msgs"></div>
-  <div class="gif-search" id="gif-search"><input class="gif-search-inp" id="gif-inp" type="text" placeholder="Search GIFs..." oninput="searchGifs(this.value)" onfocus="if(!this.value)searchGifs('reaction')"><div class="gif-grid" id="gif-grid"><div style="padding:10px;font-size:12px;color:var(--text3)">Type to search GIFs...</div></div></div>
+  <div class="gif-search" id="gif-search"><input class="gif-search-inp" id="gif-inp" type="text" placeholder="Search GIFs..." oninput="searchGifs(this.value)" onfocus="searchGifs(this.value||'trending')"><div class="gif-grid" id="gif-grid"><div style="padding:10px;font-size:12px;color:var(--text3)">Type to search GIFs...</div></div></div>
 <div class="emoji-picker" id="emoji-picker"></div>
   <div class="reply-bar" id="reply-bar">
     <div style="font-size:15px;color:var(--amber2)">↩</div>
@@ -893,7 +893,7 @@ a{color:var(--accent);text-decoration:none}
   <div class="settings-section">AI Mediator</div>
   <div class="field"><label>OpenRouter API Key</label><input type="password" id="s-or-key" placeholder="sk-or-v1-..."></div>
   <div class="field"><label>Model</label><select id="s-model"></select></div>
-  <div class="field"><label>Auto interval</label><select id="s-interval"><option value="3">Every 3 messages</option><option value="5">Every 5 messages</option><option value="8">Every 8 messages</option><option value="15">Every 15 messages</option></select></div>
+  <div class="field"><label>Auto interval</label><select id="s-interval"><option value="3">Every 3 messages</option><option value="5">Every 5 messages</option><option value="8">Every 8 messages</option><option value="15">Every 15 messages</option><option value="25" selected>Every 25 messages (default)</option><option value="50">Every 50 messages</option></select></div>
   <div class="toggle-row" style="margin-bottom:4px"><div class="toggle-info"><div class="tl">Auto Mediator</div></div><label class="toggle"><input type="checkbox" id="s-auto"><span class="toggle-track"></span></label></div>
   <div class="settings-section">Translation</div>
   <div class="field"><label>Your Language</label><select id="s-lang"></select></div>
@@ -959,7 +959,7 @@ const REACTION_EMOJIS=['❤️','😂','😮','😢','😡','👍','👎','🔥'
 
 const MODELS = [
   // ─── FREE ($0) — verified April 2026 ───────────────────────────────
-  {id:'openrouter/free',                               label:'Auto-Free (best available)',  group:'🆓 Free'},
+  {id:'openrouter/free',                               label:'Auto-Free 🟢 (free models only)',  group:'🆓 Free'},
   {id:'z-ai/glm-4.5-air:free',                         label:'GLM 4.5 Air',                 group:'🆓 Free'},
   {id:'meta-llama/llama-3.3-70b-instruct:free',        label:'Llama 3.3 70B',               group:'🆓 Free'},
   {id:'deepseek/deepseek-r1:free',                     label:'DeepSeek R1',                 group:'🆓 Free'},
@@ -1316,7 +1316,7 @@ async function doCreateRoom() {
   const orKey = document.getElementById('inp-or-key').value.trim();
   const model = document.getElementById('inp-model').value;
   const autoAI = document.getElementById('tog-auto').checked;
-  const interval = parseInt(document.getElementById('inp-interval').value);
+  const interval = parseInt(document.getElementById('inp-interval').value) || 25;
   const roomName = document.getElementById('inp-roomname').value.trim() || 'Dialogue Room';
   if (!orKey) { restore(); toast('Please enter your OpenRouter API key','err'); return; }
 
@@ -1980,7 +1980,7 @@ async function saveSettings() {
   const orKey=document.getElementById('s-or-key').value.trim()||S.room?.orKey;
   const model=document.getElementById('s-model').value;
   const autoAI=document.getElementById('s-auto').checked;
-  const interval=parseInt(document.getElementById('s-interval').value);
+  const interval=parseInt(document.getElementById('s-interval').value)||25;
   const lang=document.getElementById('s-lang').value;
   S.myLang=lang; localStorage.setItem('accord_lang',lang);
   localStorage.setItem('accord_trans_mode',S.translateMode);
@@ -2126,6 +2126,17 @@ async function addReaction(msgId, emoji) {
 }
 
 document.addEventListener('click', e => {
+  // Close emoji picker
+  const emojiPicker = document.getElementById('emoji-picker');
+  const gifSearch = document.getElementById('gif-search');
+  if (emojiPicker && !emojiPicker.contains(e.target) && !e.target.closest('.emoji-btn')) {
+    emojiPicker.classList.remove('open');
+  }
+  // Close GIF search
+  if (gifSearch && !gifSearch.contains(e.target) && !e.target.closest('.gif-btn')) {
+    gifSearch.classList.remove('open');
+  }
+  // Close reaction pickers
   if (!e.target.closest('.msg-actions') && !e.target.closest('.reaction-picker')) {
     document.querySelectorAll('.reaction-picker.open').forEach(p => p.classList.remove('open'));
   }
@@ -2149,16 +2160,27 @@ function searchGifs(q) {
     if (!grid) return;
     grid.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3)">Searching...</div>';
     try {
-      const url = 'https://tenor.googleapis.com/v2/search?q=' + encodeURIComponent(q||'reaction') + '&key=AIzaSyBVB4dNKIWserPmF7R9M6LoNYBk5qvHnpc&limit=12&media_filter=gif';
+      // Giphy public beta key (free, rate-limited, no account needed)
+      const apiKey = 'dc6zaTOxFJmzC';
+      const term = encodeURIComponent(q || 'reaction');
+      const url = 'https://api.giphy.com/v1/gifs/search?api_key=' + apiKey + '&q=' + term + '&limit=12&rating=g';
       const res = await fetch(url);
+      if (!res.ok) throw new Error('GIF fetch failed');
       const data = await res.json();
-      if (!data.results || !data.results.length) { grid.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3)">No results</div>'; return; }
-      grid.innerHTML = data.results.map(g => {
-        const src = (g.media_formats && (g.media_formats.tinygif || g.media_formats.gif) || {}).url;
-        const desc = g.content_description || 'GIF';
-        return src ? '<div class="gif-item" onclick="sendGif(\'' + src + '\',\'' + desc.replace(/'/g, '') + '\')"><img src="' + src + '" alt="' + desc + '" loading="lazy"></div>' : '';
+      const gifs = data.data || [];
+      if (!gifs.length) {
+        grid.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--text3)">No results for "' + (q||'') + '"</div>';
+        return;
+      }
+      grid.innerHTML = gifs.map(g => {
+        const src = g.images && g.images.fixed_height_small && g.images.fixed_height_small.url;
+        const full = g.images && g.images.fixed_height && g.images.fixed_height.url;
+        const title = (g.title || 'GIF').replace(/'/g, '');
+        return src ? '<div class="gif-item" onclick="sendGif(\'' + (full||src) + '\',\'' + title + '\')"><img src="' + src + '" alt="' + title + '" loading="lazy"></div>' : '';
       }).join('');
-    } catch(e) { grid.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--danger)">Could not load GIFs</div>'; }
+    } catch(e) {
+      grid.innerHTML = '<div style="padding:10px;font-size:12px;color:var(--danger)">GIFs unavailable. Check connection.</div>';
+    }
   }, 400);
 }
 
